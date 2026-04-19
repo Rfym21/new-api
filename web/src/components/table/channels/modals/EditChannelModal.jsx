@@ -36,6 +36,7 @@ import {
   Typography,
   Checkbox,
   Radio,
+  RadioGroup,
   Banner,
   Modal,
   ImagePreview,
@@ -217,8 +218,8 @@ const EditChannelModal = (props) => {
     upstream_model_update_last_detected_models: [],
     upstream_model_update_ignored_models: '',
     // 渠道级屏蔽词过滤默认值
-    sensitive_check_enabled: '', // '' 沿用全局，'true' 强制启用，'false' 强制禁用
-    sensitive_mode: '', // '' 沿用全局词表，'modify' 在全局基础上修改，'override' 覆盖全局词表
+    sensitive_check_enabled: 'inherit', // 'inherit' 沿用全局，'true' 强制启用，'false' 强制禁用
+    sensitive_mode: 'inherit', // 'inherit' 沿用全局词表，'modify' 在全局基础上修改，'override' 覆盖全局词表
     sensitive_added_words: '',
     sensitive_removed_words: '',
     sensitive_override_words: '',
@@ -867,8 +868,8 @@ const EditChannelModal = (props) => {
               ? 'true'
               : parsedSettings.sensitive_check_enabled === false
                 ? 'false'
-                : '';
-          data.sensitive_mode = parsedSettings.sensitive_mode || '';
+                : 'inherit';
+          data.sensitive_mode = parsedSettings.sensitive_mode || 'inherit';
           data.sensitive_added_words = Array.isArray(
             parsedSettings.sensitive_added_words,
           )
@@ -892,8 +893,8 @@ const EditChannelModal = (props) => {
           data.pass_through_body_enabled = false;
           data.system_prompt = '';
           data.system_prompt_override = false;
-          data.sensitive_check_enabled = '';
-          data.sensitive_mode = '';
+          data.sensitive_check_enabled = 'inherit';
+          data.sensitive_mode = 'inherit';
           data.sensitive_added_words = '';
           data.sensitive_removed_words = '';
           data.sensitive_override_words = '';
@@ -905,8 +906,8 @@ const EditChannelModal = (props) => {
         data.pass_through_body_enabled = false;
         data.system_prompt = '';
         data.system_prompt_override = false;
-        data.sensitive_check_enabled = '';
-        data.sensitive_mode = '';
+        data.sensitive_check_enabled = 'inherit';
+        data.sensitive_mode = 'inherit';
         data.sensitive_added_words = '';
         data.sensitive_removed_words = '';
         data.sensitive_override_words = '';
@@ -1808,7 +1809,10 @@ const EditChannelModal = (props) => {
     } else if (localInputs.sensitive_check_enabled === 'false') {
       channelExtraSettings.sensitive_check_enabled = false;
     }
-    const sensitiveMode = localInputs.sensitive_mode || '';
+    const sensitiveMode =
+      localInputs.sensitive_mode && localInputs.sensitive_mode !== 'inherit'
+        ? localInputs.sensitive_mode
+        : '';
     if (sensitiveMode === 'modify' || sensitiveMode === 'override') {
       channelExtraSettings.sensitive_mode = sensitiveMode;
     }
@@ -2612,27 +2616,55 @@ const EditChannelModal = (props) => {
                     {t('屏蔽词过滤（渠道级）')}
                   </Text>
 
-                  <Form.RadioGroup
-                    field='sensitive_check_enabled'
-                    label={t('此渠道屏蔽词检查')}
-                    onChange={(value) => handleInputChange('sensitive_check_enabled', value)}
-                    extraText={t('「沿用全局开关」时跟随全局「启用 Prompt 检查」；「强制启用」即使全局关闭也会检查此渠道；「强制禁用」时此渠道跳过检查')}
-                  >
-                    <Radio value=''>{t('沿用全局开关')}</Radio>
-                    <Radio value='true'>{t('强制启用')}</Radio>
-                    <Radio value='false'>{t('强制禁用')}</Radio>
-                  </Form.RadioGroup>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 6, fontSize: 14 }}>
+                      {t('此渠道屏蔽词检查')}
+                    </div>
+                    <RadioGroup
+                      value={inputs.sensitive_check_enabled || 'inherit'}
+                      onChange={(e) =>
+                        handleInputChange('sensitive_check_enabled', e.target.value)
+                      }
+                    >
+                      <Radio value='inherit'>{t('沿用全局开关')}</Radio>
+                      <Radio value='true'>{t('强制启用')}</Radio>
+                      <Radio value='false'>{t('强制禁用')}</Radio>
+                    </RadioGroup>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        color: 'var(--semi-color-text-2)',
+                      }}
+                    >
+                      {t('「沿用全局开关」时跟随全局「启用 Prompt 检查」；「强制启用」即使全局关闭也会检查此渠道；「强制禁用」时此渠道跳过检查')}
+                    </div>
+                  </div>
 
-                  <Form.RadioGroup
-                    field='sensitive_mode'
-                    label={t('屏蔽词模式')}
-                    onChange={(value) => handleInputChange('sensitive_mode', value)}
-                    extraText={t('「沿用全局词表」直接用系统全局屏蔽词；「在全局基础上修改」可同时增加与排除；「覆盖全局词表」仅用此处配置的词表')}
-                  >
-                    <Radio value=''>{t('沿用全局词表')}</Radio>
-                    <Radio value='modify'>{t('在全局基础上修改')}</Radio>
-                    <Radio value='override'>{t('覆盖全局词表')}</Radio>
-                  </Form.RadioGroup>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 6, fontSize: 14 }}>
+                      {t('屏蔽词模式')}
+                    </div>
+                    <RadioGroup
+                      value={inputs.sensitive_mode || 'inherit'}
+                      onChange={(e) =>
+                        handleInputChange('sensitive_mode', e.target.value)
+                      }
+                    >
+                      <Radio value='inherit'>{t('沿用全局词表')}</Radio>
+                      <Radio value='modify'>{t('在全局基础上修改')}</Radio>
+                      <Radio value='override'>{t('覆盖全局词表')}</Radio>
+                    </RadioGroup>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        color: 'var(--semi-color-text-2)',
+                      }}
+                    >
+                      {t('「沿用全局词表」直接用系统全局屏蔽词；「在全局基础上修改」可同时增加与排除；「覆盖全局词表」仅用此处配置的词表')}
+                    </div>
+                  </div>
 
                   {inputs.sensitive_mode === 'modify' && (
                     <>
