@@ -35,6 +35,7 @@ import {
   Button,
   Typography,
   Checkbox,
+  Radio,
   Banner,
   Modal,
   ImagePreview,
@@ -215,6 +216,12 @@ const EditChannelModal = (props) => {
     upstream_model_update_last_check_time: 0,
     upstream_model_update_last_detected_models: [],
     upstream_model_update_ignored_models: '',
+    // 渠道级屏蔽词过滤默认值
+    sensitive_check_enabled: '', // '' 沿用全局，'true' 强制启用，'false' 强制禁用
+    sensitive_mode: '', // '' 沿用全局词表，'modify' 在全局基础上修改，'override' 覆盖全局词表
+    sensitive_added_words: '',
+    sensitive_removed_words: '',
+    sensitive_override_words: '',
   };
   const [batch, setBatch] = useState(false);
   const [multiToSingle, setMultiToSingle] = useState(false);
@@ -500,6 +507,8 @@ const EditChannelModal = (props) => {
     pass_through_body_enabled: false,
     system_prompt: '',
   });
+  // 全局屏蔽词列表（供渠道级 "有效词表预览" 计算）
+  const [globalSensitiveWords, setGlobalSensitiveWords] = useState([]);
   const showApiConfigCard = true; // 控制是否显示 API 配置卡片
   const getInitValues = () => ({ ...originInputs });
 
@@ -852,6 +861,29 @@ const EditChannelModal = (props) => {
           data.system_prompt = parsedSettings.system_prompt || '';
           data.system_prompt_override =
             parsedSettings.system_prompt_override || false;
+          // 渠道级屏蔽词
+          data.sensitive_check_enabled =
+            parsedSettings.sensitive_check_enabled === true
+              ? 'true'
+              : parsedSettings.sensitive_check_enabled === false
+                ? 'false'
+                : '';
+          data.sensitive_mode = parsedSettings.sensitive_mode || '';
+          data.sensitive_added_words = Array.isArray(
+            parsedSettings.sensitive_added_words,
+          )
+            ? parsedSettings.sensitive_added_words.join('\n')
+            : '';
+          data.sensitive_removed_words = Array.isArray(
+            parsedSettings.sensitive_removed_words,
+          )
+            ? parsedSettings.sensitive_removed_words.join('\n')
+            : '';
+          data.sensitive_override_words = Array.isArray(
+            parsedSettings.sensitive_override_words,
+          )
+            ? parsedSettings.sensitive_override_words.join('\n')
+            : '';
         } catch (error) {
           console.error('解析渠道设置失败:', error);
           data.force_format = false;
@@ -860,6 +892,11 @@ const EditChannelModal = (props) => {
           data.pass_through_body_enabled = false;
           data.system_prompt = '';
           data.system_prompt_override = false;
+          data.sensitive_check_enabled = '';
+          data.sensitive_mode = '';
+          data.sensitive_added_words = '';
+          data.sensitive_removed_words = '';
+          data.sensitive_override_words = '';
         }
       } else {
         data.force_format = false;
@@ -868,6 +905,11 @@ const EditChannelModal = (props) => {
         data.pass_through_body_enabled = false;
         data.system_prompt = '';
         data.system_prompt_override = false;
+        data.sensitive_check_enabled = '';
+        data.sensitive_mode = '';
+        data.sensitive_added_words = '';
+        data.sensitive_removed_words = '';
+        data.sensitive_override_words = '';
       }
 
       if (data.settings) {
@@ -1325,6 +1367,24 @@ const EditChannelModal = (props) => {
         } catch {}
       }
       fetchModelGroups();
+      // 加载全局屏蔽词用于渠道级"有效词表预览"
+      (async () => {
+        try {
+          const res = await API.get('/api/option/');
+          const { success, data } = res?.data || {};
+          if (!success || !Array.isArray(data)) return;
+          const item = data.find((o) => o?.key === 'SensitiveWords');
+          const raw = typeof item?.value === 'string' ? item.value : '';
+          setGlobalSensitiveWords(
+            raw
+              .split('\n')
+              .map((w) => w.trim())
+              .filter(Boolean),
+          );
+        } catch {
+          setGlobalSensitiveWords([]);
+        }
+      })();
       // 重置手动输入模式状态
       setUseManualInput(false);
       // 编辑模式下恢复用户偏好，创建模式一律折叠
@@ -1729,6 +1789,12 @@ const EditChannelModal = (props) => {
     }
 
     // 生成渠道额外设置JSON
+    const splitWordLines = (text) =>
+      String(text || '')
+        .split('\n')
+        .map((w) => w.trim())
+        .filter(Boolean);
+
     const channelExtraSettings = {
       force_format: localInputs.force_format || false,
       thinking_to_content: localInputs.thinking_to_content || false,
@@ -1737,6 +1803,27 @@ const EditChannelModal = (props) => {
       system_prompt: localInputs.system_prompt || '',
       system_prompt_override: localInputs.system_prompt_override || false,
     };
+    if (localInputs.sensitive_check_enabled === 'true') {
+      channelExtraSettings.sensitive_check_enabled = true;
+    } else if (localInputs.sensitive_check_enabled === 'false') {
+      channelExtraSettings.sensitive_check_enabled = false;
+    }
+    const sensitiveMode = localInputs.sensitive_mode || '';
+    if (sensitiveMode === 'modify' || sensitiveMode === 'override') {
+      channelExtraSettings.sensitive_mode = sensitiveMode;
+    }
+    if (sensitiveMode === 'modify') {
+      const added = splitWordLines(localInputs.sensitive_added_words);
+      const removed = splitWordLines(localInputs.sensitive_removed_words);
+      if (added.length > 0) channelExtraSettings.sensitive_added_words = added;
+      if (removed.length > 0)
+        channelExtraSettings.sensitive_removed_words = removed;
+    }
+    if (sensitiveMode === 'override') {
+      const overrideWords = splitWordLines(localInputs.sensitive_override_words);
+      if (overrideWords.length > 0)
+        channelExtraSettings.sensitive_override_words = overrideWords;
+    }
     localInputs.setting = JSON.stringify(channelExtraSettings);
 
     // 处理 settings 字段（包括企业账户设置和字段透传控制）
@@ -1817,6 +1904,11 @@ const EditChannelModal = (props) => {
     delete localInputs.pass_through_body_enabled;
     delete localInputs.system_prompt;
     delete localInputs.system_prompt_override;
+    delete localInputs.sensitive_check_enabled;
+    delete localInputs.sensitive_mode;
+    delete localInputs.sensitive_added_words;
+    delete localInputs.sensitive_removed_words;
+    delete localInputs.sensitive_override_words;
     delete localInputs.is_enterprise_account;
     // 顶层的 vertex_key_type 不应发送给后端
     delete localInputs.vertex_key_type;
@@ -2512,6 +2604,117 @@ const EditChannelModal = (props) => {
 
                   <Form.TextArea field='system_prompt' label={t('系统提示词')} placeholder={t('输入系统提示词，用户的系统提示词将优先于此设置')} onChange={(value) => handleChannelSettingsChange('system_prompt', value)} autosize showClear extraText={t('用户优先：如果用户在请求中指定了系统提示词，将优先使用用户的设置')} />
                   <Form.Switch field='system_prompt_override' label={t('系统提示词拼接')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelSettingsChange('system_prompt_override', value)} extraText={t('如果用户请求中包含系统提示词，则使用此设置拼接到用户的系统提示词前面')} />
+                </div>
+
+                {/* Sensitive Filter Section (渠道级屏蔽词过滤) */}
+                <div className='pt-3'>
+                  <Text className='text-sm font-medium text-gray-500 mb-3 block'>
+                    {t('屏蔽词过滤（渠道级）')}
+                  </Text>
+
+                  <Form.RadioGroup
+                    field='sensitive_check_enabled'
+                    label={t('此渠道屏蔽词检查')}
+                    onChange={(value) => handleInputChange('sensitive_check_enabled', value)}
+                    extraText={t('「沿用全局开关」时跟随全局「启用 Prompt 检查」；「强制启用」即使全局关闭也会检查此渠道；「强制禁用」时此渠道跳过检查')}
+                  >
+                    <Radio value=''>{t('沿用全局开关')}</Radio>
+                    <Radio value='true'>{t('强制启用')}</Radio>
+                    <Radio value='false'>{t('强制禁用')}</Radio>
+                  </Form.RadioGroup>
+
+                  <Form.RadioGroup
+                    field='sensitive_mode'
+                    label={t('屏蔽词模式')}
+                    onChange={(value) => handleInputChange('sensitive_mode', value)}
+                    extraText={t('「沿用全局词表」直接用系统全局屏蔽词；「在全局基础上修改」可同时增加与排除；「覆盖全局词表」仅用此处配置的词表')}
+                  >
+                    <Radio value=''>{t('沿用全局词表')}</Radio>
+                    <Radio value='modify'>{t('在全局基础上修改')}</Radio>
+                    <Radio value='override'>{t('覆盖全局词表')}</Radio>
+                  </Form.RadioGroup>
+
+                  {inputs.sensitive_mode === 'modify' && (
+                    <>
+                      <Form.TextArea
+                        field='sensitive_added_words'
+                        label={t('增量屏蔽词（在全局之外新增）')}
+                        placeholder={t('一行一个屏蔽词，不需要符号分割')}
+                        onChange={(value) => handleInputChange('sensitive_added_words', value)}
+                        autosize={{ minRows: 3, maxRows: 10 }}
+                        showClear
+                        extraText={t('将这些词叠加到全局词表后用于此渠道检查')}
+                      />
+                      <Form.TextArea
+                        field='sensitive_removed_words'
+                        label={t('减量屏蔽词（从全局移除）')}
+                        placeholder={t('一行一个屏蔽词，不需要符号分割')}
+                        onChange={(value) => handleInputChange('sensitive_removed_words', value)}
+                        autosize={{ minRows: 3, maxRows: 10 }}
+                        showClear
+                        extraText={t('从全局词表中排除这些词（大小写不敏感）')}
+                      />
+                    </>
+                  )}
+
+                  {inputs.sensitive_mode === 'override' && (
+                    <Form.TextArea
+                      field='sensitive_override_words'
+                      label={t('覆盖屏蔽词（仅此渠道生效）')}
+                      placeholder={t('一行一个屏蔽词，不需要符号分割')}
+                      onChange={(value) => handleInputChange('sensitive_override_words', value)}
+                      autosize={{ minRows: 3, maxRows: 10 }}
+                      showClear
+                      extraText={t('忽略全局词表，仅用这里列出的词进行检查；留空则此渠道不做屏蔽词检查')}
+                    />
+                  )}
+
+                  {(() => {
+                    const norm = (w) => String(w || '').trim().toLowerCase();
+                    const parse = (s) => String(s || '').split('\n').map(norm).filter(Boolean);
+                    const mode = inputs.sensitive_mode || '';
+                    let effective = [];
+                    let sourceHint = '';
+                    if (mode === 'override') {
+                      effective = [...new Set(parse(inputs.sensitive_override_words))];
+                      sourceHint = t('（已覆盖全局）');
+                    } else if (mode === 'modify') {
+                      const s = new Set(globalSensitiveWords.map(norm).filter(Boolean));
+                      parse(inputs.sensitive_removed_words).forEach((w) => s.delete(w));
+                      parse(inputs.sensitive_added_words).forEach((w) => s.add(w));
+                      effective = [...s];
+                      sourceHint = t('（全局 + 增量 − 减量）');
+                    } else {
+                      effective = [...new Set(globalSensitiveWords.map(norm).filter(Boolean))];
+                      sourceHint = t('（从全局配置沿用）');
+                    }
+                    const disabledByEmptyOverride =
+                      mode === 'override' && effective.length === 0;
+                    return (
+                      <div className='mt-3 p-3 bg-gray-50 rounded text-xs'>
+                        <div className='mb-1 font-medium text-gray-700'>
+                          {t('此渠道实际生效的屏蔽词（共 {{count}} 个）：', {
+                            count: effective.length,
+                          })}{' '}
+                          <span className='text-gray-500'>{sourceHint}</span>
+                        </div>
+                        {disabledByEmptyOverride ? (
+                          <div className='text-gray-400'>
+                            {t('（已关闭屏蔽词检查）')}
+                          </div>
+                        ) : effective.length === 0 ? (
+                          <div className='text-gray-400'>{t('（无屏蔽词）')}</div>
+                        ) : (
+                          <div
+                            className='text-gray-600 break-all'
+                            style={{ fontFamily: 'JetBrains Mono, Consolas' }}
+                          >
+                            {effective.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             );

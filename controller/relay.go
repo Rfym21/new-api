@@ -122,7 +122,7 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 		return
 	}
 
-	needSensitiveCheck := setting.ShouldCheckPromptSensitive()
+	needSensitiveCheck := relayInfo.ChannelSetting.ShouldCheckSensitive(setting.ShouldCheckPromptSensitive())
 	needCountToken := constant.CountToken
 	// Avoid building huge CombineText (strings.Join) when token counting and sensitive check are both disabled.
 	var meta *types.TokenCountMeta
@@ -133,7 +133,8 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 	}
 
 	if needSensitiveCheck && meta != nil {
-		contains, words := service.CheckSensitiveText(meta.CombineText)
+		effectiveWords := relayInfo.ChannelSetting.EffectiveSensitiveWords(setting.SensitiveWords)
+		contains, words := service.CheckSensitiveTextWithWords(meta.CombineText, effectiveWords)
 		if contains {
 			logger.LogWarn(c, fmt.Sprintf("user sensitive words detected: %s", strings.Join(words, ", ")))
 			newAPIError = types.NewError(err, types.ErrorCodeSensitiveWordsDetected)

@@ -36,6 +36,15 @@ func CheckSensitiveText(text string) (bool, []string) {
 	return SensitiveWordContains(text)
 }
 
+// CheckSensitiveTextWithWords 使用指定词表扫描文本（用于渠道级检查）。
+// 词表由调用方决定（通常来自 dto.ChannelSettings.EffectiveSensitiveWords）。
+func CheckSensitiveTextWithWords(text string, words []string) (bool, []string) {
+	if len(words) == 0 || len(text) == 0 {
+		return false, nil
+	}
+	return AcSearch(strings.ToLower(text), words, true)
+}
+
 // SensitiveWordContains 是否包含敏感词，返回是否包含敏感词和敏感词列表
 func SensitiveWordContains(text string) (bool, []string) {
 	if len(setting.SensitiveWords) == 0 {
