@@ -4,11 +4,13 @@ import "github.com/QuantumNous/new-api/setting/config"
 
 type QuotaSetting struct {
 	EnableFreeModelPreConsume bool `json:"enable_free_model_pre_consume"` // 是否对免费模型启用预消耗
+	EmptyResponseNoBilling    bool `json:"empty_response_no_billing"`     // 空回复（CompletionTokens=0）是否不计费
 }
 
 // 默认配置
 var quotaSetting = QuotaSetting{
 	EnableFreeModelPreConsume: true,
+	EmptyResponseNoBilling:    false,
 }
 
 func init() {

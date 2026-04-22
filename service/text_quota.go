@@ -51,6 +51,7 @@ type textQuotaSummary struct {
 	FileSearchCallCount      int
 	AudioInputPrice          float64
 	ImageGenerationCallPrice float64
+	EmptyResponseSkipped     bool
 }
 
 func cacheWriteTokensTotal(summary textQuotaSummary) int {
@@ -278,6 +279,19 @@ func calculateTextQuotaSummary(ctx *gin.Context, relayInfo *relaycommon.RelayInf
 		summary.Quota = 1
 	}
 
+	// 空回复不计费：CompletionTokens=0 时根据全局 + 渠道级开关决定是否跳过计费
+	if summary.CompletionTokens == 0 {
+		globalSkip := operation_setting.GetQuotaSetting().EmptyResponseNoBilling
+		skip := globalSkip
+		if relayInfo.ChannelMeta != nil {
+			skip = relayInfo.ChannelMeta.ChannelSetting.ShouldSkipEmptyResponseBilling(globalSkip)
+		}
+		if skip {
+			summary.Quota = 0
+			summary.EmptyResponseSkipped = true
+		}
+	}
+
 	return summary
 }
 
@@ -302,6 +316,38 @@ func PostTextConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, us
 
 	adminRejectReason := common.GetContextKeyString(ctx, constant.ContextKeyAdminRejectReason)
 	summary := calculateTextQuotaSummary(ctx, relayInfo, usage)
+
+	// 空回复不计费分支：全额退还预扣费、不更新 used_quota、写 type=5 错误日志、不写 type=2 消费日志
+	if summary.EmptyResponseSkipped {
+		if err := SettleBilling(ctx, relayInfo, 0); err != nil {
+			logger.LogError(ctx, "error settling empty-response billing: "+err.Error())
+		}
+		logModel := summary.ModelName
+		if strings.HasPrefix(logModel, "gpt-4-gizmo") {
+			logModel = "gpt-4-gizmo-*"
+		}
+		if strings.HasPrefix(logModel, "gpt-4o-gizmo") {
+			logModel = "gpt-4o-gizmo-*"
+		}
+		logger.LogInfo(ctx, fmt.Sprintf("空回复不计费：userId=%d, channelId=%d, model=%s, promptTokens=%d", relayInfo.UserId, relayInfo.ChannelId, logModel, summary.PromptTokens))
+		if constant.ErrorLogEnabled {
+			other := map[string]interface{}{
+				"empty_response_skipped": true,
+				"prompt_tokens":          summary.PromptTokens,
+				"completion_tokens":      0,
+				"model":                  logModel,
+			}
+			if adminRejectReason != "" {
+				other["reject_reason"] = adminRejectReason
+			}
+			model.RecordErrorLog(ctx, relayInfo.UserId, relayInfo.ChannelId,
+				logModel, summary.TokenName,
+				"空回复不计费（CompletionTokens=0）",
+				relayInfo.TokenId, int(summary.UseTimeSeconds),
+				relayInfo.IsStream, relayInfo.UsingGroup, other)
+		}
+		return
+	}
 
 	if summary.WebSearchCallCount > 0 {
 		extraContent = append(extraContent, fmt.Sprintf("Web Search 调用 %d 次，调用花费 %s", summary.WebSearchCallCount, decimal.NewFromFloat(summary.WebSearchPrice).Mul(decimal.NewFromInt(int64(summary.WebSearchCallCount))).Div(decimal.NewFromInt(1000)).Mul(decimal.NewFromFloat(summary.GroupRatio)).Mul(decimal.NewFromFloat(common.QuotaPerUnit)).String()))

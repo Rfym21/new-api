@@ -57,6 +57,7 @@ export default function GeneralSettings(props) {
     DefaultCollapseSidebar: false,
     DemoSiteEnabled: false,
     SelfUseModeEnabled: false,
+    'quota_setting.empty_response_no_billing': false,
     'token_setting.max_user_tokens': 1000,
   });
   const refForm = useRef();
@@ -388,6 +389,17 @@ export default function GeneralSettings(props) {
                   checkedText='｜'
                   uncheckedText='〇'
                   onChange={handleFieldChange('SelfUseModeEnabled')}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  field={'quota_setting.empty_response_no_billing'}
+                  label={t('空回复不计费')}
+                  extraText={t('开启后，上游返回 completion_tokens=0 的请求不扣费，预扣额度全额退还，并记入错误日志')}
+                  size='default'
+                  checkedText='｜'
+                  uncheckedText='〇'
+                  onChange={handleFieldChange('quota_setting.empty_response_no_billing')}
                 />
               </Col>
             </Row>

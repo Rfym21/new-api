@@ -223,6 +223,8 @@ const EditChannelModal = (props) => {
     sensitive_added_words: '',
     sensitive_removed_words: '',
     sensitive_override_words: '',
+    // 渠道级空回复不计费
+    empty_response_no_billing_enabled: 'inherit', // 'inherit' 沿用全局，'true' 强制启用不计费，'false' 强制禁用（照常计费）
   };
   const [batch, setBatch] = useState(false);
   const [multiToSingle, setMultiToSingle] = useState(false);
@@ -885,6 +887,13 @@ const EditChannelModal = (props) => {
           )
             ? parsedSettings.sensitive_override_words.join('\n')
             : '';
+          // 渠道级空回复不计费
+          data.empty_response_no_billing_enabled =
+            parsedSettings.empty_response_no_billing_enabled === true
+              ? 'true'
+              : parsedSettings.empty_response_no_billing_enabled === false
+                ? 'false'
+                : 'inherit';
         } catch (error) {
           console.error('解析渠道设置失败:', error);
           data.force_format = false;
@@ -898,6 +907,7 @@ const EditChannelModal = (props) => {
           data.sensitive_added_words = '';
           data.sensitive_removed_words = '';
           data.sensitive_override_words = '';
+          data.empty_response_no_billing_enabled = 'inherit';
         }
       } else {
         data.force_format = false;
@@ -911,6 +921,7 @@ const EditChannelModal = (props) => {
         data.sensitive_added_words = '';
         data.sensitive_removed_words = '';
         data.sensitive_override_words = '';
+        data.empty_response_no_billing_enabled = 'inherit';
       }
 
       if (data.settings) {
@@ -1828,6 +1839,11 @@ const EditChannelModal = (props) => {
       if (overrideWords.length > 0)
         channelExtraSettings.sensitive_override_words = overrideWords;
     }
+    if (localInputs.empty_response_no_billing_enabled === 'true') {
+      channelExtraSettings.empty_response_no_billing_enabled = true;
+    } else if (localInputs.empty_response_no_billing_enabled === 'false') {
+      channelExtraSettings.empty_response_no_billing_enabled = false;
+    }
     localInputs.setting = JSON.stringify(channelExtraSettings);
 
     // 处理 settings 字段（包括企业账户设置和字段透传控制）
@@ -1913,6 +1929,7 @@ const EditChannelModal = (props) => {
     delete localInputs.sensitive_added_words;
     delete localInputs.sensitive_removed_words;
     delete localInputs.sensitive_override_words;
+    delete localInputs.empty_response_no_billing_enabled;
     delete localInputs.is_enterprise_account;
     // 顶层的 vertex_key_type 不应发送给后端
     delete localInputs.vertex_key_type;
@@ -2747,6 +2764,38 @@ const EditChannelModal = (props) => {
                       </div>
                     );
                   })()}
+                </div>
+
+                {/* Billing Control Section (渠道级计费控制) */}
+                <div className='pt-3'>
+                  <Text className='text-sm font-medium text-gray-500 mb-3 block'>
+                    {t('计费控制（渠道级）')}
+                  </Text>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 6, fontSize: 14 }}>
+                      {t('此渠道空回复计费')}
+                    </div>
+                    <RadioGroup
+                      value={inputs.empty_response_no_billing_enabled || 'inherit'}
+                      onChange={(e) =>
+                        handleInputChange('empty_response_no_billing_enabled', e.target.value)
+                      }
+                    >
+                      <Radio value='inherit'>{t('沿用全局开关')}</Radio>
+                      <Radio value='true'>{t('强制启用不计费')}</Radio>
+                      <Radio value='false'>{t('强制禁用（照常计费）')}</Radio>
+                    </RadioGroup>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        color: 'var(--semi-color-text-2)',
+                      }}
+                    >
+                      {t('「沿用全局开关」跟随全局「空回复不计费」；「强制启用」即使全局关闭也跳过此渠道空回复计费；「强制禁用」此渠道空回复照常计费')}
+                    </div>
+                  </div>
                 </div>
               </div>
             );

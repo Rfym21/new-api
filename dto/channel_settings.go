@@ -21,6 +21,10 @@ type ChannelSettings struct {
 	SensitiveRemovedWords []string `json:"sensitive_removed_words,omitempty"`
 	// SensitiveOverrideWords override 模式下作为唯一来源的屏蔽词
 	SensitiveOverrideWords []string `json:"sensitive_override_words,omitempty"`
+
+	// 空回复不计费（渠道级）
+	// EmptyResponseNoBillingEnabled 渠道级开关：nil 沿用全局，*true 强制启用不计费，*false 强制禁用（照常计费）
+	EmptyResponseNoBillingEnabled *bool `json:"empty_response_no_billing_enabled,omitempty"`
 }
 
 // ShouldCheckSensitive 渠道级与全局开关的合成结果。
@@ -30,6 +34,15 @@ func (s ChannelSettings) ShouldCheckSensitive(globalEnabled bool) bool {
 		return globalEnabled
 	}
 	return *s.SensitiveCheckEnabled
+}
+
+// ShouldSkipEmptyResponseBilling 渠道级与全局开关的合成结果。
+// EmptyResponseNoBillingEnabled 为 nil 时沿用 globalEnabled；显式 true/false 则强制生效。
+func (s ChannelSettings) ShouldSkipEmptyResponseBilling(globalEnabled bool) bool {
+	if s.EmptyResponseNoBillingEnabled == nil {
+		return globalEnabled
+	}
+	return *s.EmptyResponseNoBillingEnabled
 }
 
 // EffectiveSensitiveWords 根据 SensitiveMode 合并全局词表与渠道配置，返回此渠道实际生效的词表。
