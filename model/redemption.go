@@ -141,6 +141,9 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if err != nil {
 			return err
 		}
+		if rebateErr := AddTopupRebateForInviter(tx, userId, redemption.Quota); rebateErr != nil {
+			common.SysError("redemption rebate failed: " + rebateErr.Error())
+		}
 		redemption.RedeemedTime = common.GetTimestamp()
 		redemption.Status = common.RedemptionCodeStatusUsed
 		redemption.UsedUserId = userId

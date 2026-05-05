@@ -25,6 +25,8 @@ const quotaSchema = z.object({
   PreConsumedQuota: z.coerce.number().min(0),
   QuotaForInviter: z.coerce.number().min(0),
   QuotaForInvitee: z.coerce.number().min(0),
+  TopupRebateEnabled: z.boolean(),
+  TopupRebateRatioForInviter: z.coerce.number().min(0).max(1),
   TopUpLink: z.string().url().optional().or(z.literal('')),
   'general_setting.docs_link': z.string().url().optional().or(z.literal('')),
   'quota_setting.enable_free_model_pre_consume': z.boolean(),
@@ -160,6 +162,60 @@ export function QuotaSettingsSection({
                 </FormControl>
                 <FormDescription>
                   {t('Quota given to invited users')}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='TopupRebateEnabled'
+            render={({ field }) => (
+              <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                <div className='space-y-0.5'>
+                  <FormLabel className='text-base'>
+                    {t('Enable Top-Up Rebate')}
+                  </FormLabel>
+                  <FormDescription>
+                    {t(
+                      'When enabled, every successful top-up by an invited user grants a rebate to the inviter’s aff quota by the ratio below.'
+                    )}
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={updateOption.isPending}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='TopupRebateRatioForInviter'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Top-Up Rebate Ratio (Inviter)')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    step={0.01}
+                    min={0}
+                    max={1}
+                    value={field.value as number}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    disabled={!form.watch('TopupRebateEnabled')}
+                  />
+                </FormControl>
+                <FormDescription>
+                  {t('0.0–1.0, e.g. 0.05 means 5% rebate of the credited quota.')}
                 </FormDescription>
                 <FormMessage />
               </FormItem>

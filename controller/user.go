@@ -934,6 +934,9 @@ func ManageUser(c *gin.Context) {
 				common.ApiError(c, err)
 				return
 			}
+			if rebateErr := model.AddTopupRebateForInviter(model.DB, user.Id, req.Value); rebateErr != nil {
+				logger.LogError(c.Request.Context(), "admin add quota rebate failed: "+rebateErr.Error())
+			}
 			model.RecordLogWithAdminInfo(user.Id, model.LogTypeManage,
 				fmt.Sprintf("管理员增加用户额度 %s", logger.LogQuota(req.Value)), adminInfo)
 		case "subtract":

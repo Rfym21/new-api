@@ -144,6 +144,10 @@ func Recharge(referenceId string, customerId string, callerIp string) (err error
 			return err
 		}
 
+		if rebateErr := AddTopupRebateForInviter(tx, topUp.UserId, int(quota)); rebateErr != nil {
+			common.SysError("topup rebate failed: " + rebateErr.Error())
+		}
+
 		return nil
 	})
 
@@ -373,6 +377,10 @@ func ManualCompleteTopUp(tradeNo string, callerIp string) error {
 			return err
 		}
 
+		if rebateErr := AddTopupRebateForInviter(tx, topUp.UserId, quotaToAdd); rebateErr != nil {
+			common.SysError("manual topup rebate failed: " + rebateErr.Error())
+		}
+
 		userId = topUp.UserId
 		payMoney = topUp.Money
 		paymentMethod = topUp.PaymentMethod
@@ -449,6 +457,10 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 			return err
 		}
 
+		if rebateErr := AddTopupRebateForInviter(tx, topUp.UserId, int(quota)); rebateErr != nil {
+			common.SysError("creem topup rebate failed: " + rebateErr.Error())
+		}
+
 		return nil
 	})
 
@@ -510,6 +522,10 @@ func RechargeWaffo(tradeNo string, callerIp string) (err error) {
 			return err
 		}
 
+		if rebateErr := AddTopupRebateForInviter(tx, topUp.UserId, quotaToAdd); rebateErr != nil {
+			common.SysError("waffo topup rebate failed: " + rebateErr.Error())
+		}
+
 		return nil
 	})
 
@@ -569,6 +585,10 @@ func RechargeWaffoPancake(tradeNo string) (err error) {
 
 		if err := tx.Model(&User{}).Where("id = ?", topUp.UserId).Update("quota", gorm.Expr("quota + ?", quotaToAdd)).Error; err != nil {
 			return err
+		}
+
+		if rebateErr := AddTopupRebateForInviter(tx, topUp.UserId, quotaToAdd); rebateErr != nil {
+			common.SysError("waffo pancake topup rebate failed: " + rebateErr.Error())
 		}
 
 		return nil

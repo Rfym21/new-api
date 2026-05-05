@@ -36,6 +36,8 @@ export default function SettingsCreditLimit(props) {
     PreConsumedQuota: '',
     QuotaForInviter: '',
     QuotaForInvitee: '',
+    TopupRebateEnabled: false,
+    TopupRebateRatioForInviter: '',
     'quota_setting.enable_free_model_pre_consume': true,
   });
   const refForm = useRef();
@@ -80,7 +82,11 @@ export default function SettingsCreditLimit(props) {
     const currentInputs = {};
     for (let key in props.options) {
       if (Object.keys(inputs).includes(key)) {
-        currentInputs[key] = props.options[key];
+        let value = props.options[key];
+        if (key === 'TopupRebateEnabled') {
+          value = value === true || value === 'true';
+        }
+        currentInputs[key] = value;
       }
     }
     setInputs(currentInputs);
@@ -162,6 +168,43 @@ export default function SettingsCreditLimit(props) {
                     setInputs({
                       ...inputs,
                       QuotaForInvitee: String(value),
+                    })
+                  }
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Col xs={24} sm={12} md={8} lg={8} xl={6}>
+                <Form.Switch
+                  label={t('启用充值返利')}
+                  field={'TopupRebateEnabled'}
+                  extraText={t(
+                    '启用后，被邀请用户每次充值都会按下方比例给邀请人返利至邀请额度（AffQuota）',
+                  )}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      TopupRebateEnabled: value,
+                    })
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={6}>
+                <Form.InputNumber
+                  label={t('充值返利比例（邀请人）')}
+                  field={'TopupRebateRatioForInviter'}
+                  step={0.01}
+                  min={0}
+                  max={1}
+                  precision={4}
+                  suffix={''}
+                  extraText={t('0.0–1.0，例如 0.05 表示 5%')}
+                  placeholder={t('例如：0.05')}
+                  disabled={!inputs.TopupRebateEnabled}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      TopupRebateRatioForInviter: String(value),
                     })
                   }
                 />

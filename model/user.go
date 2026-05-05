@@ -1054,3 +1054,41 @@ func RootUserExists() bool {
 	}
 	return true
 }
+
+// AddTopupRebateForInviter 在 topup 成功入账后给用户的邀请人按 TopupRebateRatioForInviter
+// 比例发返利到 AffQuota（沿用 QuotaForInviter 注册奖励的写入模式）。
+//
+// 调用约束：
+//   - 必须在 topup 已通过 idempotency 检查、quota 实际入账之后调用，避免重复返
+//   - 若调用方处于事务中，传入 tx；否则传 model.DB（idempotency 已保证整段流程仅执行一次）
+//   - topupQuota 是入账到主 quota 的内部 unit 数（已乘 QuotaPerUnit）
+//   - 开关关闭、比例 <= 0、用户无邀请人、计算后返利 <= 0 任一条件命中均视为无操作
+//   - 返利失败不应阻塞用户充值；调用方收到错误请仅写日志
+func AddTopupRebateForInviter(tx *gorm.DB, userId int, topupQuota int) error {
+	if !common.TopupRebateEnabled || common.TopupRebateRatioForInviter <= 0 {
+		return nil
+	}
+	if topupQuota <= 0 {
+		return nil
+	}
+	var user User
+	if err := tx.Select("id, inviter_id").Where("id = ?", userId).First(&user).Error; err != nil {
+		return err
+	}
+	if user.InviterId == 0 {
+		return nil
+	}
+	rebate := int(float64(topupQuota) * common.TopupRebateRatioForInviter)
+	if rebate <= 0 {
+		return nil
+	}
+	if err := tx.Model(&User{}).Where("id = ?", user.InviterId).Updates(map[string]interface{}{
+		"aff_quota":         gorm.Expr("aff_quota + ?", rebate),
+		"aff_history_quota": gorm.Expr("aff_history_quota + ?", rebate),
+	}).Error; err != nil {
+		return err
+	}
+	RecordLog(user.InviterId, LogTypeSystem, fmt.Sprintf("充值返利：被邀请用户 #%d 充值 %s，按 %.2f%% 返利 %s 至邀请额度",
+		userId, logger.LogQuota(topupQuota), common.TopupRebateRatioForInviter*100, logger.LogQuota(rebate)))
+	return nil
+}
