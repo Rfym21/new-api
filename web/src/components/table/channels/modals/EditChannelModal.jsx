@@ -36,7 +36,6 @@ import {
   Typography,
   Checkbox,
   Radio,
-  RadioGroup,
   Banner,
   Modal,
   ImagePreview,
@@ -2637,8 +2636,10 @@ const EditChannelModal = (props) => {
                     <div style={{ marginBottom: 6, fontSize: 14 }}>
                       {t('此渠道屏蔽词检查')}
                     </div>
-                    <RadioGroup
-                      value={inputs.sensitive_check_enabled || 'inherit'}
+                    <Form.RadioGroup
+                      field='sensitive_check_enabled'
+                      noLabel
+                      initValue='inherit'
                       onChange={(e) =>
                         handleInputChange('sensitive_check_enabled', e.target.value)
                       }
@@ -2646,7 +2647,7 @@ const EditChannelModal = (props) => {
                       <Radio value='inherit'>{t('沿用全局开关')}</Radio>
                       <Radio value='true'>{t('强制启用')}</Radio>
                       <Radio value='false'>{t('强制禁用')}</Radio>
-                    </RadioGroup>
+                    </Form.RadioGroup>
                     <div
                       style={{
                         marginTop: 4,
@@ -2662,8 +2663,10 @@ const EditChannelModal = (props) => {
                     <div style={{ marginBottom: 6, fontSize: 14 }}>
                       {t('屏蔽词模式')}
                     </div>
-                    <RadioGroup
-                      value={inputs.sensitive_mode || 'inherit'}
+                    <Form.RadioGroup
+                      field='sensitive_mode'
+                      noLabel
+                      initValue='inherit'
                       onChange={(e) =>
                         handleInputChange('sensitive_mode', e.target.value)
                       }
@@ -2671,7 +2674,7 @@ const EditChannelModal = (props) => {
                       <Radio value='inherit'>{t('沿用全局词表')}</Radio>
                       <Radio value='modify'>{t('在全局基础上修改')}</Radio>
                       <Radio value='override'>{t('覆盖全局词表')}</Radio>
-                    </RadioGroup>
+                    </Form.RadioGroup>
                     <div
                       style={{
                         marginTop: 4,
@@ -2776,8 +2779,10 @@ const EditChannelModal = (props) => {
                     <div style={{ marginBottom: 6, fontSize: 14 }}>
                       {t('此渠道空回复计费')}
                     </div>
-                    <RadioGroup
-                      value={inputs.empty_response_no_billing_enabled || 'inherit'}
+                    <Form.RadioGroup
+                      field='empty_response_no_billing_enabled'
+                      noLabel
+                      initValue='inherit'
                       onChange={(e) =>
                         handleInputChange('empty_response_no_billing_enabled', e.target.value)
                       }
@@ -2785,7 +2790,7 @@ const EditChannelModal = (props) => {
                       <Radio value='inherit'>{t('沿用全局开关')}</Radio>
                       <Radio value='true'>{t('强制启用不计费')}</Radio>
                       <Radio value='false'>{t('强制禁用（照常计费）')}</Radio>
-                    </RadioGroup>
+                    </Form.RadioGroup>
                     <div
                       style={{
                         marginTop: 4,
