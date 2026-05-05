@@ -75,6 +75,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import {
   Tooltip,
   TooltipContent,
@@ -376,6 +378,7 @@ export function ChannelMutateDrawer({
   const currentBaseUrl = form.watch('base_url')
   const currentModels = form.watch('models')
   const currentModelMapping = form.watch('model_mapping')
+  const sensitiveMode = form.watch('sensitive_mode')
   const awsKeyType = form.watch('aws_key_type')
   const upstreamModelUpdateCheckEnabled = form.watch(
     'upstream_model_update_check_enabled'
@@ -3153,6 +3156,249 @@ export function ChannelMutateDrawer({
                         </FormItem>
                       )}
                     />
+
+                    {/* 渠道级屏蔽词过滤（fork 增量） */}
+                    <div className='space-y-3 rounded-lg border p-4'>
+                      <SubHeading
+                        title={t('Sensitive word filter (channel level)')}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='sensitive_check_enabled'
+                        render={({ field }) => (
+                          <FormItem className='space-y-2'>
+                            <FormLabel>
+                              {t('Sensitive word check for this channel')}
+                            </FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value || 'inherit'}
+                                onValueChange={field.onChange}
+                                className='flex flex-wrap gap-4'
+                              >
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='inherit'
+                                    id='sensitive_check_enabled-inherit'
+                                  />
+                                  <Label
+                                    htmlFor='sensitive_check_enabled-inherit'
+                                    className='font-normal'
+                                  >
+                                    {t('Follow global switch')}
+                                  </Label>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='true'
+                                    id='sensitive_check_enabled-true'
+                                  />
+                                  <Label
+                                    htmlFor='sensitive_check_enabled-true'
+                                    className='font-normal'
+                                  >
+                                    {t('Force enable')}
+                                  </Label>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='false'
+                                    id='sensitive_check_enabled-false'
+                                  />
+                                  <Label
+                                    htmlFor='sensitive_check_enabled-false'
+                                    className='font-normal'
+                                  >
+                                    {t('Force disable')}
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormDescription>
+                              {t(
+                                'Follow global respects the system Prompt Check toggle; Force enable runs the check on this channel even if global is off; Force disable skips the check on this channel.'
+                              )}
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name='sensitive_mode'
+                        render={({ field }) => (
+                          <FormItem className='space-y-2'>
+                            <FormLabel>{t('Sensitive word mode')}</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value || 'inherit'}
+                                onValueChange={field.onChange}
+                                className='flex flex-wrap gap-4'
+                              >
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='inherit'
+                                    id='sensitive_mode-inherit'
+                                  />
+                                  <Label
+                                    htmlFor='sensitive_mode-inherit'
+                                    className='font-normal'
+                                  >
+                                    {t('Inherit global word list')}
+                                  </Label>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='modify'
+                                    id='sensitive_mode-modify'
+                                  />
+                                  <Label
+                                    htmlFor='sensitive_mode-modify'
+                                    className='font-normal'
+                                  >
+                                    {t('Modify on top of global')}
+                                  </Label>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='override'
+                                    id='sensitive_mode-override'
+                                  />
+                                  <Label
+                                    htmlFor='sensitive_mode-override'
+                                    className='font-normal'
+                                  >
+                                    {t('Override global')}
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormDescription>
+                              {t(
+                                'Inherit uses the system word list; Modify adds and removes on top of global; Override replaces global with the list defined here.'
+                              )}
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+
+                      {sensitiveMode === 'modify' && (
+                        <>
+                          <FormField
+                            control={form.control}
+                            name='sensitive_added_words'
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t('Added words (one per line)')}
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea rows={3} {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name='sensitive_removed_words'
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t('Removed words (one per line)')}
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea rows={3} {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
+
+                      {sensitiveMode === 'override' && (
+                        <FormField
+                          control={form.control}
+                          name='sensitive_override_words'
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t('Override word list (one per line)')}
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea rows={4} {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* 渠道级计费控制（fork 增量） */}
+                    <div className='space-y-3 rounded-lg border p-4'>
+                      <SubHeading
+                        title={t('Billing control (channel level)')}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='empty_response_no_billing_enabled'
+                        render={({ field }) => (
+                          <FormItem className='space-y-2'>
+                            <FormLabel>
+                              {t('Empty response billing for this channel')}
+                            </FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value || 'inherit'}
+                                onValueChange={field.onChange}
+                                className='flex flex-wrap gap-4'
+                              >
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='inherit'
+                                    id='empty_response-inherit'
+                                  />
+                                  <Label
+                                    htmlFor='empty_response-inherit'
+                                    className='font-normal'
+                                  >
+                                    {t('Follow global switch')}
+                                  </Label>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='true'
+                                    id='empty_response-true'
+                                  />
+                                  <Label
+                                    htmlFor='empty_response-true'
+                                    className='font-normal'
+                                  >
+                                    {t('Force skip billing')}
+                                  </Label>
+                                </div>
+                                <div className='flex items-center space-x-2'>
+                                  <RadioGroupItem
+                                    value='false'
+                                    id='empty_response-false'
+                                  />
+                                  <Label
+                                    htmlFor='empty_response-false'
+                                    className='font-normal'
+                                  >
+                                    {t('Force bill as usual')}
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormDescription>
+                              {t(
+                                'Follow global tracks the system Empty Response No Billing toggle; Force skip bypasses billing on empty responses for this channel even if global is off; Force bill always bills empty responses on this channel.'
+                              )}
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     {MODEL_FETCHABLE_TYPES.has(currentType) && (
                       <div className='space-y-3 rounded-lg border p-4'>

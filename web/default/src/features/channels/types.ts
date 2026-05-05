@@ -68,6 +68,14 @@ export interface ChannelSettings {
   pass_through_body_enabled?: boolean
   system_prompt?: string
   system_prompt_override?: boolean
+  // 渠道级屏蔽词过滤（fork 增量）：null/undefined=沿用全局, true=强制启用, false=强制禁用
+  sensitive_check_enabled?: boolean | null
+  sensitive_mode?: 'inherit' | 'modify' | 'override' | string
+  sensitive_added_words?: string[]
+  sensitive_removed_words?: string[]
+  sensitive_override_words?: string[]
+  // 渠道级空回不计费（fork 增量）：同上三态
+  empty_response_no_billing_enabled?: boolean | null
 }
 
 export interface ChannelOtherSettings {

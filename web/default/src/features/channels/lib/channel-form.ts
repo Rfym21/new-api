@@ -43,6 +43,16 @@ export const channelFormSchema = z.object({
   pass_through_body_enabled: z.boolean().optional(),
   system_prompt: z.string().optional(),
   system_prompt_override: z.boolean().optional(),
+  // 渠道级屏蔽词过滤（fork 增量）
+  sensitive_check_enabled: z.enum(['inherit', 'true', 'false']).optional(),
+  sensitive_mode: z.enum(['inherit', 'modify', 'override']).optional(),
+  sensitive_added_words: z.string().optional(),
+  sensitive_removed_words: z.string().optional(),
+  sensitive_override_words: z.string().optional(),
+  // 渠道级空回不计费（fork 增量）
+  empty_response_no_billing_enabled: z
+    .enum(['inherit', 'true', 'false'])
+    .optional(),
   // Type-specific settings (stored in settings JSON)
   is_enterprise_account: z.boolean().optional(), // OpenRouter specific
   vertex_key_type: z.enum(['json', 'api_key']).optional(), // Vertex AI specific
@@ -101,6 +111,14 @@ export const CHANNEL_FORM_DEFAULT_VALUES: ChannelFormValues = {
   pass_through_body_enabled: false,
   system_prompt: '',
   system_prompt_override: false,
+  // 渠道级屏蔽词过滤（fork 增量）
+  sensitive_check_enabled: 'inherit',
+  sensitive_mode: 'inherit',
+  sensitive_added_words: '',
+  sensitive_removed_words: '',
+  sensitive_override_words: '',
+  // 渠道级空回不计费（fork 增量）
+  empty_response_no_billing_enabled: 'inherit',
   // Type-specific settings
   is_enterprise_account: false,
   vertex_key_type: 'json',
@@ -130,18 +148,48 @@ export function transformChannelToFormDefaults(
   channel: Channel
 ): ChannelFormValues {
   // Parse channel extra settings from setting field
-  let extraSettings = {
+  let extraSettings: {
+    force_format: boolean
+    thinking_to_content: boolean
+    proxy: string
+    pass_through_body_enabled: boolean
+    system_prompt: string
+    system_prompt_override: boolean
+    sensitive_check_enabled: 'inherit' | 'true' | 'false'
+    sensitive_mode: 'inherit' | 'modify' | 'override'
+    sensitive_added_words: string
+    sensitive_removed_words: string
+    sensitive_override_words: string
+    empty_response_no_billing_enabled: 'inherit' | 'true' | 'false'
+  } = {
     force_format: false,
     thinking_to_content: false,
     proxy: '',
     pass_through_body_enabled: false,
     system_prompt: '',
     system_prompt_override: false,
+    sensitive_check_enabled: 'inherit',
+    sensitive_mode: 'inherit',
+    sensitive_added_words: '',
+    sensitive_removed_words: '',
+    sensitive_override_words: '',
+    empty_response_no_billing_enabled: 'inherit',
   }
 
   if (channel.setting) {
     try {
       const parsed = JSON.parse(channel.setting)
+      const triState = (
+        v: unknown
+      ): 'inherit' | 'true' | 'false' =>
+        v === true ? 'true' : v === false ? 'false' : 'inherit'
+      const joinWords = (v: unknown): string =>
+        Array.isArray(v) ? v.join('\n') : ''
+      const sensitiveMode: 'inherit' | 'modify' | 'override' =
+        parsed.sensitive_mode === 'modify' ||
+        parsed.sensitive_mode === 'override'
+          ? parsed.sensitive_mode
+          : 'inherit'
       extraSettings = {
         force_format: parsed.force_format || false,
         thinking_to_content: parsed.thinking_to_content || false,
@@ -149,6 +197,14 @@ export function transformChannelToFormDefaults(
         pass_through_body_enabled: parsed.pass_through_body_enabled || false,
         system_prompt: parsed.system_prompt || '',
         system_prompt_override: parsed.system_prompt_override || false,
+        sensitive_check_enabled: triState(parsed.sensitive_check_enabled),
+        sensitive_mode: sensitiveMode,
+        sensitive_added_words: joinWords(parsed.sensitive_added_words),
+        sensitive_removed_words: joinWords(parsed.sensitive_removed_words),
+        sensitive_override_words: joinWords(parsed.sensitive_override_words),
+        empty_response_no_billing_enabled: triState(
+          parsed.empty_response_no_billing_enabled
+        ),
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -251,7 +307,7 @@ export function transformChannelToFormDefaults(
  * Build the setting JSON string from form extra settings
  */
 function buildSettingJSON(formData: ChannelFormValues): string {
-  const settingObj = {
+  const settingObj: Record<string, unknown> = {
     force_format: formData.force_format || false,
     thinking_to_content: formData.thinking_to_content || false,
     proxy: formData.proxy || '',
@@ -259,6 +315,41 @@ function buildSettingJSON(formData: ChannelFormValues): string {
     system_prompt: formData.system_prompt || '',
     system_prompt_override: formData.system_prompt_override || false,
   }
+
+  // 渠道级屏蔽词（fork 增量）：'inherit' 表示沿用全局，序列化时省略 → nil
+  if (formData.sensitive_check_enabled === 'true') {
+    settingObj.sensitive_check_enabled = true
+  } else if (formData.sensitive_check_enabled === 'false') {
+    settingObj.sensitive_check_enabled = false
+  }
+  const splitWordLines = (text?: string): string[] =>
+    String(text || '')
+      .split('\n')
+      .map((w) => w.trim())
+      .filter(Boolean)
+  const sensitiveMode = formData.sensitive_mode
+  if (sensitiveMode === 'modify' || sensitiveMode === 'override') {
+    settingObj.sensitive_mode = sensitiveMode
+  }
+  if (sensitiveMode === 'modify') {
+    const added = splitWordLines(formData.sensitive_added_words)
+    const removed = splitWordLines(formData.sensitive_removed_words)
+    if (added.length > 0) settingObj.sensitive_added_words = added
+    if (removed.length > 0) settingObj.sensitive_removed_words = removed
+  }
+  if (sensitiveMode === 'override') {
+    const overrideWords = splitWordLines(formData.sensitive_override_words)
+    if (overrideWords.length > 0)
+      settingObj.sensitive_override_words = overrideWords
+  }
+
+  // 渠道级空回不计费（fork 增量）
+  if (formData.empty_response_no_billing_enabled === 'true') {
+    settingObj.empty_response_no_billing_enabled = true
+  } else if (formData.empty_response_no_billing_enabled === 'false') {
+    settingObj.empty_response_no_billing_enabled = false
+  }
+
   return JSON.stringify(settingObj)
 }
 
