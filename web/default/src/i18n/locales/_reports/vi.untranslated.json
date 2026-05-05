@@ -1,5 +1,10 @@
 {
-  "Go to Settings": "Go to Settings",
-  "Failed to adjust quota": "Failed to adjust quota",
-  "Select an operation mode and enter the amount": "Select an operation mode and enter the amount"
+  "Follow global respects the system Prompt Check toggle; Force enable runs the check on this channel even if global is off; Force disable skips the check on this channel.": "Follow global respects the system Prompt Check toggle; Force enable runs the check on this channel even if global is off; Force disable skips the check on this channel.",
+  "Inherit uses the system word list; Modify adds and removes on top of global; Override replaces global with the list defined here.": "Inherit uses the system word list; Modify adds and removes on top of global; Override replaces global with the list defined here.",
+  "Follow global tracks the system Empty Response No Billing toggle; Force skip bypasses billing on empty responses for this channel even if global is off; Force bill always bills empty responses on this channel.": "Follow global tracks the system Empty Response No Billing toggle; Force skip bypasses billing on empty responses for this channel even if global is off; Force bill always bills empty responses on this channel.",
+  "When enabled, every successful top-up by an invited user grants a rebate to the inviter’s aff quota by the ratio below.": "When enabled, every successful top-up by an invited user grants a rebate to the inviter’s aff quota by the ratio below.",
+  "0.0–1.0, e.g. 0.05 means 5% rebate of the credited quota.": "0.0–1.0, e.g. 0.05 means 5% rebate of the credited quota.",
+  "Custom navigation entries appended to the sidebar. URL accepts external (https://...) or internal (/path) links.": "Custom navigation entries appended to the sidebar. URL accepts external (https://...) or internal (/path) links.",
+  "Showing up to 240 results — refine search to find more.": "Showing up to 240 results — refine search to find more.",
+  "Failed to save sidebar items": "Failed to save sidebar items"
 }
