@@ -20,7 +20,7 @@ For commercial licensing, please contact support@quantumnous.com
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getLucideIcon } from '../../helpers/render';
+import { getLucideIcon, getLucideIconByName } from '../../helpers/render';
 import { ChevronLeft } from 'lucide-react';
 import { useSidebarCollapsed } from '../../hooks/common/useSidebarCollapsed';
 import { useSidebar } from '../../hooks/common/useSidebar';
@@ -223,6 +223,81 @@ const SiderBar = ({ onNavigate = () => {} }) => {
     return filteredItems;
   }, [chatItems, t, isModuleVisible]);
 
+  // 管理员配置的自定义导航项（按 group 字段聚合）
+  const customGroups = useMemo(() => {
+    const raw = localStorage.getItem('sidebar_custom_items') || '[]';
+    let parsed = [];
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = [];
+    }
+    if (!Array.isArray(parsed)) return [];
+    const buckets = new Map();
+    parsed.forEach((it, idx) => {
+      if (!it || typeof it !== 'object') return;
+      if (typeof it.title !== 'string' || typeof it.url !== 'string') return;
+      if (!it.title.trim() || !it.url.trim()) return;
+      const groupTitle = (it.group && it.group.trim()) || t('自定义');
+      const list = buckets.get(groupTitle) || [];
+      list.push({
+        text: it.title,
+        itemKey: `custom-${it.id || idx}`,
+        to: it.url,
+        external: /^https?:\/\//i.test(it.url),
+        icon: it.icon,
+      });
+      buckets.set(groupTitle, list);
+    });
+    return Array.from(buckets.entries()).map(([title, items]) => ({
+      title,
+      items,
+    }));
+  }, [t]);
+
+  // 把自定义项的 URL 注册进 routerMapState，让 renderWrapper 拿到 to
+  useEffect(() => {
+    setRouterMapState((prev) => {
+      const next = { ...routerMap };
+      // 保留 chat 等动态注册项
+      Object.keys(prev).forEach((k) => {
+        if (k.startsWith('chat')) next[k] = prev[k];
+      });
+      customGroups.forEach((group) => {
+        group.items.forEach((it) => {
+          next[it.itemKey] = it.to;
+        });
+      });
+      return next;
+    });
+  }, [customGroups]);
+
+  const renderCustomNavItem = (item) => {
+    const isSelected = selectedKeys.includes(item.itemKey);
+    const textColor = isSelected
+      ? 'var(--semi-color-primary)'
+      : 'inherit';
+    return (
+      <Nav.Item
+        key={item.itemKey}
+        itemKey={item.itemKey}
+        text={
+          <span
+            className='truncate font-medium text-sm'
+            style={{ color: textColor }}
+          >
+            {item.text}
+          </span>
+        }
+        icon={
+          <div className='sidebar-icon-container flex-shrink-0'>
+            {getLucideIconByName(item.icon, isSelected)}
+          </div>
+        }
+      />
+    );
+  };
+
   // 更新路由映射，添加聊天路由
   const updateRouterMapWithChats = (chats) => {
     const newRouterMap = { ...routerMap };
@@ -416,6 +491,21 @@ const SiderBar = ({ onNavigate = () => {} }) => {
             // 如果没有路由，直接返回元素
             if (!to) return itemElement;
 
+            // 自定义导航项的外链：用原生 a 标签新窗口打开
+            if (/^https?:\/\//i.test(to)) {
+              return (
+                <a
+                  href={to}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  style={{ textDecoration: 'none' }}
+                  onClick={onNavigate}
+                >
+                  {itemElement}
+                </a>
+              );
+            }
+
             return (
               <Link
                 style={{ textDecoration: 'none' }}
@@ -487,6 +577,19 @@ const SiderBar = ({ onNavigate = () => {} }) => {
               </div>
             </>
           )}
+
+          {/* 自定义导航项 - 管理员配置后所有用户可见 */}
+          {customGroups.map((group) => (
+            <React.Fragment key={`custom-group-${group.title}`}>
+              <Divider className='sidebar-divider' />
+              <div>
+                {!collapsed && (
+                  <div className='sidebar-group-label'>{group.title}</div>
+                )}
+                {group.items.map((item) => renderCustomNavItem(item))}
+              </div>
+            </React.Fragment>
+          ))}
         </Nav>
       </SkeletonWrapper>
 

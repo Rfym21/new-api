@@ -22,6 +22,7 @@ import { Card, Spin } from '@douyinfe/semi-ui';
 import SettingsGeneral from '../../pages/Setting/Operation/SettingsGeneral';
 import SettingsHeaderNavModules from '../../pages/Setting/Operation/SettingsHeaderNavModules';
 import SettingsSidebarModulesAdmin from '../../pages/Setting/Operation/SettingsSidebarModulesAdmin';
+import SettingsSidebarCustomItems from '../../pages/Setting/Operation/SettingsSidebarCustomItems';
 import SettingsSensitiveWords from '../../pages/Setting/Operation/SettingsSensitiveWords';
 import SettingsLog from '../../pages/Setting/Operation/SettingsLog';
 import SettingsMonitoring from '../../pages/Setting/Operation/SettingsMonitoring';
@@ -56,6 +57,9 @@ const OperationSetting = () => {
 
     /* 左侧边栏模块管理（管理员） */
     SidebarModulesAdmin: '',
+
+    /* 左侧边栏自定义导航项 */
+    SidebarCustomItems: '[]',
 
     /* 敏感词设置 */
     CheckSensitiveEnabled: false,
@@ -134,6 +138,10 @@ const OperationSetting = () => {
         {/* 左侧边栏模块管理（管理员） */}
         <div style={{ marginTop: '10px' }}>
           <SettingsSidebarModulesAdmin options={inputs} refresh={onRefresh} />
+        </div>
+        {/* 左侧边栏自定义导航项 */}
+        <div style={{ marginTop: '10px' }}>
+          <SettingsSidebarCustomItems options={inputs} refresh={onRefresh} />
         </div>
         {/* 屏蔽词过滤设置 */}
         <Card style={{ marginTop: '10px' }}>

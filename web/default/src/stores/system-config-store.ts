@@ -19,6 +19,14 @@ export interface CurrencyConfig {
   customCurrencyExchangeRate: number
 }
 
+export interface SidebarCustomItem {
+  id: string
+  title: string
+  url: string
+  icon?: string
+  group?: string
+}
+
 export interface SystemConfig {
   systemName: string
   logo: string
@@ -26,6 +34,7 @@ export interface SystemConfig {
   demoSiteEnabled?: boolean
   displayTokenStatEnabled?: boolean
   currency: CurrencyConfig
+  sidebarCustomItems?: SidebarCustomItem[]
 }
 
 export const DEFAULT_CURRENCY_CONFIG: CurrencyConfig = {

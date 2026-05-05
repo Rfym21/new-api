@@ -26,6 +26,7 @@ const defaultGeneralSettings: GeneralSettings = {
   TopupRebateEnabled: false,
   TopupRebateRatioForInviter: 0,
   TopUpLink: '',
+  SidebarCustomItems: '[]',
   'general_setting.docs_link': '',
   'quota_setting.enable_free_model_pre_consume': true,
   QuotaPerUnit: 500000,

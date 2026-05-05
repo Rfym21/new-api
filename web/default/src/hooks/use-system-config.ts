@@ -3,6 +3,7 @@ import {
   useSystemConfigStore,
   type CurrencyConfig,
   type CurrencyDisplayType,
+  type SidebarCustomItem,
   type SystemConfig,
   DEFAULT_CURRENCY_CONFIG,
 } from '@/stores/system-config-store'
@@ -28,6 +29,7 @@ interface StatusApiResponse {
     usd_exchange_rate?: number
     custom_currency_symbol?: string
     custom_currency_exchange_rate?: number
+    sidebar_custom_items?: string
   }
 }
 
@@ -80,6 +82,32 @@ export function mapStatusDataToConfig(
     demoSiteEnabled: data.demo_site_enabled,
     displayTokenStatEnabled: data.display_token_stat_enabled,
     currency,
+    sidebarCustomItems: parseSidebarCustomItems(data.sidebar_custom_items),
+  }
+}
+
+function parseSidebarCustomItems(raw?: string): SidebarCustomItem[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(
+        (item): item is SidebarCustomItem =>
+          item &&
+          typeof item === 'object' &&
+          typeof (item as SidebarCustomItem).title === 'string' &&
+          typeof (item as SidebarCustomItem).url === 'string'
+      )
+      .map((item) => ({
+        id: String(item.id || `${item.title}-${item.url}`),
+        title: item.title,
+        url: item.url,
+        icon: item.icon,
+        group: item.group,
+      }))
+  } catch {
+    return []
   }
 }
 

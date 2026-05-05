@@ -81,6 +81,7 @@ import {
   Server,
   CalendarClock,
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import {
   SiAtlassian,
   SiAuth0,
@@ -155,6 +156,30 @@ export function getLucideIcon(key, selected = false) {
     default:
       return <CircleUser {...commonProps} color={iconColor} />;
   }
+}
+
+// 按 lucide-react 图标名（PascalCase）渲染图标，找不到时回退到 Link 图标。
+// 用于侧栏自定义导航项的运行时图标 lookup。
+export function getLucideIconByName(name, selected = false) {
+  const size = 16;
+  const strokeWidth = 2;
+  const SELECTED_COLOR = 'var(--semi-color-primary)';
+  const iconColor = selected ? SELECTED_COLOR : 'currentColor';
+  const commonProps = {
+    size,
+    strokeWidth,
+    color: iconColor,
+    className: `transition-colors duration-200 ${selected ? 'transition-transform duration-200 scale-105' : ''}`,
+  };
+  const Icon = (name && LucideIcons[name]) || LucideIcons.Link;
+  return <Icon {...commonProps} />;
+}
+
+export function listLucideIconNames() {
+  return Object.keys(LucideIcons)
+    .filter((name) => /^[A-Z]/.test(name))
+    .filter((name) => typeof LucideIcons[name] === 'function')
+    .sort();
 }
 
 // 获取模型分类

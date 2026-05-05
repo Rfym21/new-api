@@ -6,6 +6,8 @@ import { ROLE } from '@/lib/roles'
 import { useLayout } from '@/context/layout-provider'
 import { useSidebarConfig } from '@/hooks/use-sidebar-config'
 import { useSidebarData } from '@/hooks/use-sidebar-data'
+import { useSystemConfig } from '@/hooks/use-system-config'
+import { getLucideIcon } from '@/lib/lucide-icon'
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +15,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import { getNavGroupsForPath } from '../lib/workspace-registry'
+import type { NavGroup as NavGroupType, NavLink } from '../types'
 import { NavGroup } from './nav-group'
 import { WorkspaceSwitcher } from './workspace-switcher'
 
@@ -30,6 +33,7 @@ export function AppSidebar() {
   const { pathname } = useLocation()
   const userRole = useAuthStore((state) => state.auth.user?.role)
   const sidebarData = useSidebarData()
+  const { sidebarCustomItems } = useSystemConfig()
 
   // Get navigation group configuration corresponding to current path from workspace registry
   const allNavGroups = getNavGroupsForPath(pathname, t) || sidebarData.navGroups
@@ -49,6 +53,27 @@ export function AppSidebar() {
     })
   }, [configFilteredNavGroups, userRole])
 
+  // 管理员配置的自定义导航项追加到末尾，按 group 字段聚合
+  const customNavGroups = useMemo<NavGroupType[]>(() => {
+    if (!sidebarCustomItems || sidebarCustomItems.length === 0) return []
+    const buckets = new Map<string, NavLink[]>()
+    sidebarCustomItems.forEach((item) => {
+      const groupTitle = (item.group && item.group.trim()) || t('Custom')
+      const list = buckets.get(groupTitle) ?? []
+      list.push({
+        title: item.title,
+        url: item.url,
+        icon: getLucideIcon(item.icon),
+      })
+      buckets.set(groupTitle, list)
+    })
+    return Array.from(buckets.entries()).map(([title, items]) => ({
+      id: `custom-${title}`,
+      title,
+      items,
+    }))
+  }, [sidebarCustomItems, t])
+
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
@@ -59,6 +84,9 @@ export function AppSidebar() {
           const key = props.id || props.title
           return <NavGroup key={key} {...props} />
         })}
+        {customNavGroups.map((props) => (
+          <NavGroup key={props.id} {...props} />
+        ))}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

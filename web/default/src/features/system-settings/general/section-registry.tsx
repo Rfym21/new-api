@@ -4,6 +4,7 @@ import { ChannelAffinitySection } from './channel-affinity'
 import { CheckinSettingsSection } from './checkin-settings-section'
 import { PricingSection } from './pricing-section'
 import { QuotaSettingsSection } from './quota-settings-section'
+import { SidebarCustomItemsSection } from './sidebar-custom-items-section'
 import { SystemBehaviorSection } from './system-behavior-section'
 import { SystemInfoSection } from './system-info-section'
 
@@ -127,6 +128,15 @@ const GENERAL_SECTIONS = [
             settings['channel_affinity_setting.rules'],
         }}
       />
+    ),
+  },
+  {
+    id: 'sidebar-custom-items',
+    titleKey: 'Sidebar Custom Items',
+    descriptionKey:
+      'Custom navigation entries appended to the sidebar. URL accepts external (https://...) or internal (/path) links.',
+    build: (settings: GeneralSettings) => (
+      <SidebarCustomItemsSection defaultValue={settings.SidebarCustomItems} />
     ),
   },
 ] as const

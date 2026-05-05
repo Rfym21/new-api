@@ -45,6 +45,7 @@ export type GeneralSettings = {
   TopupRebateEnabled: boolean
   TopupRebateRatioForInviter: number
   TopUpLink: string
+  SidebarCustomItems: string
   'general_setting.docs_link': string
   'quota_setting.enable_free_model_pre_consume': boolean
   QuotaPerUnit: number

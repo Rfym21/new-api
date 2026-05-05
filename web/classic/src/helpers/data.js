@@ -39,6 +39,11 @@ export function setStatusData(data) {
     data.default_collapse_sidebar,
   );
   localStorage.setItem('mj_notify_enabled', data.mj_notify_enabled);
+  if (typeof data.sidebar_custom_items === 'string') {
+    localStorage.setItem('sidebar_custom_items', data.sidebar_custom_items);
+  } else {
+    localStorage.removeItem('sidebar_custom_items');
+  }
   if (data.chat_link) {
     // localStorage.setItem('chat_link', data.chat_link);
   } else {
