@@ -126,6 +126,7 @@ var QuotaForInvitee = 0
 var TopupRebateEnabled = false
 var TopupRebateRatioForInviter = 0.0
 var SidebarCustomItems = "[]"
+var SensitiveErrorReturnWordsEnabled = false
 var ChannelDisableThreshold = 5.0
 var AutomaticDisableChannelEnabled = false
 var AutomaticEnableChannelEnabled = false

@@ -6,5 +6,6 @@
   "0.0–1.0, e.g. 0.05 means 5% rebate of the credited quota.": "0.0–1.0, e.g. 0.05 means 5% rebate of the credited quota.",
   "Custom navigation entries appended to the sidebar. URL accepts external (https://...) or internal (/path) links.": "Custom navigation entries appended to the sidebar. URL accepts external (https://...) or internal (/path) links.",
   "Showing up to 240 results — refine search to find more.": "Showing up to 240 results — refine search to find more.",
-  "Failed to save sidebar items": "Failed to save sidebar items"
+  "Failed to save sidebar items": "Failed to save sidebar items",
+  "When enabled, the API error response includes the matched sensitive words. Off by default — only logged server-side.": "When enabled, the API error response includes the matched sensitive words. Off by default — only logged server-side."
 }

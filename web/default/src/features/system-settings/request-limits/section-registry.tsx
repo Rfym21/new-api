@@ -32,6 +32,8 @@ const REQUEST_LIMITS_SECTIONS = [
         defaultValues={{
           CheckSensitiveEnabled: settings.CheckSensitiveEnabled,
           CheckSensitiveOnPromptEnabled: settings.CheckSensitiveOnPromptEnabled,
+          SensitiveErrorReturnWordsEnabled:
+            settings.SensitiveErrorReturnWordsEnabled,
           SensitiveWords: settings.SensitiveWords,
         }}
       />

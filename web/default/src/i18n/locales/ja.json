@@ -3945,6 +3945,8 @@
     "No custom sidebar items configured.": "No custom sidebar items configured.",
     "Title": "Title",
     "e.g. Documentation": "e.g. Documentation",
-    "Add item": "Add item"
+    "Add item": "Add item",
+    "Return triggered words in error": "Return triggered words in error",
+    "When enabled, the API error response includes the matched sensitive words. Off by default — only logged server-side.": "When enabled, the API error response includes the matched sensitive words. Off by default — only logged server-side."
   }
 }

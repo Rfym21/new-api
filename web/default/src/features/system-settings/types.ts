@@ -267,6 +267,7 @@ export type RequestLimitsSettings = {
   ModelRequestRateLimitGroup: string
   CheckSensitiveEnabled: boolean
   CheckSensitiveOnPromptEnabled: boolean
+  SensitiveErrorReturnWordsEnabled: boolean
   SensitiveWords: string
   'fetch_setting.enable_ssrf_protection': boolean
   'fetch_setting.allow_private_ip': boolean

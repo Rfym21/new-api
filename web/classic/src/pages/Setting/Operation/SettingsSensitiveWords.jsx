@@ -34,6 +34,7 @@ export default function SettingsSensitiveWords(props) {
   const [inputs, setInputs] = useState({
     CheckSensitiveEnabled: false,
     CheckSensitiveOnPromptEnabled: false,
+    SensitiveErrorReturnWordsEnabled: false,
     SensitiveWords: '',
   });
   const refForm = useRef();
@@ -121,6 +122,24 @@ export default function SettingsSensitiveWords(props) {
                     setInputs({
                       ...inputs,
                       CheckSensitiveOnPromptEnabled: value,
+                    })
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  field={'SensitiveErrorReturnWordsEnabled'}
+                  label={t('错误信息中返回命中违禁词')}
+                  size='default'
+                  checkedText='｜'
+                  uncheckedText='〇'
+                  extraText={t(
+                    '开启后，命中屏蔽词时会把具体词拼到返回给客户端的错误消息中（默认仅写日志）',
+                  )}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      SensitiveErrorReturnWordsEnabled: value,
                     })
                   }
                 />

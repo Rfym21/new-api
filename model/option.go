@@ -138,6 +138,7 @@ func InitOptionMap() {
 	common.OptionMap["TopupRebateEnabled"] = strconv.FormatBool(common.TopupRebateEnabled)
 	common.OptionMap["TopupRebateRatioForInviter"] = strconv.FormatFloat(common.TopupRebateRatioForInviter, 'f', -1, 64)
 	common.OptionMap["SidebarCustomItems"] = common.SidebarCustomItems
+	common.OptionMap["SensitiveErrorReturnWordsEnabled"] = strconv.FormatBool(common.SensitiveErrorReturnWordsEnabled)
 	common.OptionMap["QuotaRemindThreshold"] = strconv.Itoa(common.QuotaRemindThreshold)
 	common.OptionMap["PreConsumedQuota"] = strconv.Itoa(common.PreConsumedQuota)
 	common.OptionMap["ModelRequestRateLimitCount"] = strconv.Itoa(setting.ModelRequestRateLimitCount)
@@ -490,6 +491,8 @@ func updateOptionMap(key string, value string) (err error) {
 		common.TopupRebateRatioForInviter, _ = strconv.ParseFloat(value, 64)
 	case "SidebarCustomItems":
 		common.SidebarCustomItems = value
+	case "SensitiveErrorReturnWordsEnabled":
+		common.SensitiveErrorReturnWordsEnabled, _ = strconv.ParseBool(value)
 	case "QuotaRemindThreshold":
 		common.QuotaRemindThreshold, _ = strconv.Atoi(value)
 	case "PreConsumedQuota":

@@ -139,8 +139,13 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 		effectiveWords := channelSetting.EffectiveSensitiveWords(setting.SensitiveWords)
 		contains, words := service.CheckSensitiveTextWithWords(meta.CombineText, effectiveWords)
 		if contains {
-			logger.LogWarn(c, fmt.Sprintf("user sensitive words detected: %s", strings.Join(words, ", ")))
-			newAPIError = types.NewError(err, types.ErrorCodeSensitiveWordsDetected)
+			joinedWords := strings.Join(words, ", ")
+			logger.LogWarn(c, fmt.Sprintf("user sensitive words detected: %s", joinedWords))
+			sensitiveErr := err
+			if common.SensitiveErrorReturnWordsEnabled {
+				sensitiveErr = fmt.Errorf("prompt contains sensitive words: %s", joinedWords)
+			}
+			newAPIError = types.NewError(sensitiveErr, types.ErrorCodeSensitiveWordsDetected)
 			return
 		}
 	}

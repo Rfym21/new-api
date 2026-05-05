@@ -21,6 +21,7 @@ import { useUpdateOption } from '../hooks/use-update-option'
 const sensitiveSchema = z.object({
   CheckSensitiveEnabled: z.boolean(),
   CheckSensitiveOnPromptEnabled: z.boolean(),
+  SensitiveErrorReturnWordsEnabled: z.boolean(),
   SensitiveWords: z.string().optional(),
 })
 
@@ -100,6 +101,31 @@ export function SensitiveWordsSection({
                     <FormDescription>
                       {t(
                         'When enabled, prompts are scanned before reaching upstream models.'
+                      )}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='SensitiveErrorReturnWordsEnabled'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      {t('Return triggered words in error')}
+                    </FormLabel>
+                    <FormDescription>
+                      {t(
+                        'When enabled, the API error response includes the matched sensitive words. Off by default — only logged server-side.'
                       )}
                     </FormDescription>
                   </div>

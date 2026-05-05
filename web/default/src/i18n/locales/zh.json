@@ -3945,6 +3945,8 @@
     "No custom sidebar items configured.": "尚未配置任何自定义项",
     "Title": "标题",
     "e.g. Documentation": "例如：使用文档",
-    "Add item": "添加一项"
+    "Add item": "添加一项",
+    "Return triggered words in error": "错误信息中返回命中违禁词",
+    "When enabled, the API error response includes the matched sensitive words. Off by default — only logged server-side.": "开启后，API 返回的错误信息会包含本次命中的具体违禁词。默认关闭，只写入服务端日志。"
   }
 }

@@ -13,6 +13,7 @@ const defaultRequestLimitsSettings: RequestLimitsSettings = {
   ModelRequestRateLimitGroup: '',
   CheckSensitiveEnabled: false,
   CheckSensitiveOnPromptEnabled: false,
+  SensitiveErrorReturnWordsEnabled: false,
   SensitiveWords: '',
   'fetch_setting.enable_ssrf_protection': true,
   'fetch_setting.allow_private_ip': false,
