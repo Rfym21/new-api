@@ -202,6 +202,16 @@ export interface MultiKeyStatusResponse {
 // API Request Parameters
 // ============================================================================
 
+export type ChannelSortBy =
+  | 'id'
+  | 'name'
+  | 'priority'
+  | 'balance'
+  | 'response_time'
+  | 'test_time'
+
+export type ChannelSortOrder = 'asc' | 'desc'
+
 export interface GetChannelsParams {
   p?: number
   page_size?: number
@@ -210,6 +220,8 @@ export interface GetChannelsParams {
   group?: string
   id_sort?: boolean
   tag_mode?: boolean
+  sort_by?: ChannelSortBy
+  sort_order?: ChannelSortOrder
 }
 
 export interface SearchChannelsParams {
@@ -220,6 +232,8 @@ export interface SearchChannelsParams {
   type?: number
   id_sort?: boolean
   tag_mode?: boolean
+  sort_by?: ChannelSortBy
+  sort_order?: ChannelSortOrder
   p?: number
   page_size?: number
 }
