@@ -8,16 +8,10 @@ import { useSidebarConfig } from '@/hooks/use-sidebar-config'
 import { useSidebarData } from '@/hooks/use-sidebar-data'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { getLucideIcon } from '@/lib/lucide-icon'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarRail,
-} from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarRail } from '@/components/ui/sidebar'
 import { getNavGroupsForPath } from '../lib/workspace-registry'
 import type { NavGroup as NavGroupType, NavLink } from '../types'
 import { NavGroup } from './nav-group'
-import { WorkspaceSwitcher } from './workspace-switcher'
 
 /**
  * Application sidebar component
@@ -76,10 +70,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
-      <SidebarHeader>
-        <WorkspaceSwitcher workspaces={sidebarData.workspaces} />
-      </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className='py-2'>
         {currentNavGroups.map((props) => {
           const key = props.id || props.title
           return <NavGroup key={key} {...props} />
