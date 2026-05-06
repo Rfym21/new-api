@@ -4,10 +4,12 @@
 
 We provide security updates for the following versions:
 
+
 | Version | Supported          |
 | ------- | ------------------ |
 | Latest  | :white_check_mark: |
 | Older   | :x:                |
+
 
 We strongly recommend that users always use the latest version for the best security and features.
 
@@ -23,7 +25,7 @@ To report a security issue, please use the GitHub Security Advisories tab to "[O
 
 Alternatively, you can report via email:
 
-- **Email:** support@quantumnous.com
+- **Email:** [support@quantumnous.com](mailto:support@quantumnous.com)
 - **Subject:** `[SECURITY] Security Vulnerability Report`
 
 ### What to Include
