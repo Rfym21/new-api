@@ -194,7 +194,7 @@ export function processChartData(
         legends: { visible: true, selectMode: 'single' },
       },
       spec_model_line: {
-        type: 'line',
+        type: 'area',
         data: [{ id: 'lineData', values: [] }],
         xField: 'Time',
         yField: 'Count',

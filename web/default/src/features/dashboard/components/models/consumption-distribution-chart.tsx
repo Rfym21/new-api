@@ -97,6 +97,15 @@ export function ConsumptionDistributionChart(
     ]
   )
   const spec = chartType === 'bar' ? chartData.spec_line : chartData.spec_area
+  const specType = typeof spec?.type === 'string' ? spec.type : chartType
+  const chartKey = [
+    chartType,
+    specType,
+    props.loading ? 'loading' : 'ready',
+    props.data.length,
+    resolvedTheme,
+    customization.preset,
+  ].join('-')
 
   return (
     <div className='overflow-hidden rounded-lg border'>
@@ -134,7 +143,7 @@ export function ConsumptionDistributionChart(
       <div className='h-[300px] p-1.5 sm:h-96 sm:p-2'>
         {themeReady && spec && (
           <VChart
-            key={`${chartType}-${resolvedTheme}-${customization.preset}`}
+            key={chartKey}
             spec={{
               ...spec,
               theme: resolvedTheme === 'dark' ? 'dark' : 'light',
