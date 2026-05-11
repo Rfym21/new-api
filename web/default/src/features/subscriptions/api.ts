@@ -114,6 +114,13 @@ export async function paySubscriptionEpay(
   }
 }
 
+export async function paySubscriptionBalance(
+  data: SubscriptionPayRequest
+): Promise<ApiResponse<{ trade_no?: string }>> {
+  const res = await api.post('/api/subscription/balance/pay', data)
+  return res.data
+}
+
 // ============================================================================
 // User Self Subscriptions
 // ============================================================================

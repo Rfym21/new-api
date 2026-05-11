@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Crown, CalendarClock, Package } from 'lucide-react'
+import { Crown, CalendarClock, Package, Wallet } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -23,6 +23,7 @@ import {
   paySubscriptionStripe,
   paySubscriptionCreem,
   paySubscriptionEpay,
+  paySubscriptionBalance,
 } from '../../api'
 import { formatDuration, formatResetPeriod } from '../../lib'
 import type { PlanRecord } from '../../types'
@@ -64,7 +65,8 @@ export function SubscriptionPurchaseDialog(props: Props) {
   const hasCreem = props.enableCreem && !!plan.creem_product_id
   const hasEpay =
     props.enableOnlineTopUp && (props.epayMethods || []).length > 0
-  const hasAnyPayment = hasStripe || hasCreem || hasEpay
+  const hasBalance = plan.allow_balance_purchase === true
+  const hasAnyPayment = hasStripe || hasCreem || hasEpay || hasBalance
   const totalAmount = Number(plan.total_amount || 0)
   const price = Number(plan.price_amount || 0).toFixed(2)
   const limitReached =
@@ -163,6 +165,23 @@ export function SubscriptionPurchaseDialog(props: Props) {
     }
   }
 
+  const handlePayBalance = async () => {
+    setPaying(true)
+    try {
+      const res = await paySubscriptionBalance({ plan_id: plan.id })
+      if (res.success) {
+        toast.success(t('Subscription purchased with balance'))
+        props.onOpenChange(false)
+      } else {
+        toast.error(res.message || t('Payment request failed'))
+      }
+    } catch {
+      toast.error(t('Payment request failed'))
+    } finally {
+      setPaying(false)
+    }
+  }
+
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent className='max-sm:w-[calc(100vw-1.5rem)] sm:max-w-md'>
@@ -238,7 +257,7 @@ export function SubscriptionPurchaseDialog(props: Props) {
               <p className='text-muted-foreground text-xs'>
                 {t('Select payment method')}
               </p>
-              {(hasStripe || hasCreem) && (
+              {(hasStripe || hasCreem || hasBalance) && (
                 <div className='grid grid-cols-2 gap-2 sm:flex'>
                   {hasStripe && (
                     <Button
@@ -258,6 +277,17 @@ export function SubscriptionPurchaseDialog(props: Props) {
                       disabled={paying || limitReached}
                     >
                       Creem
+                    </Button>
+                  )}
+                  {hasBalance && (
+                    <Button
+                      variant='outline'
+                      className='flex-1'
+                      onClick={handlePayBalance}
+                      disabled={paying || limitReached}
+                    >
+                      <Wallet className='mr-1 h-4 w-4' />
+                      {t('Pay with Balance')}
                     </Button>
                   )}
                 </div>

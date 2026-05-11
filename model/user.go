@@ -18,6 +18,9 @@ import (
 
 const UserNameMaxLength = 20
 
+// ErrInsufficientQuota 用户额度不足，原子扣费时返回。
+var ErrInsufficientQuota = errors.New("余额不足")
+
 // User if you add sensitive fields, don't forget to clean them in setupLogin function.
 // Otherwise, the sensitive information will be saved on local storage in plain text!
 type User struct {
@@ -930,6 +933,31 @@ func decreaseUserQuota(id int, quota int) (err error) {
 		return err
 	}
 	return err
+}
+
+// DeductUserQuotaIfSufficient 原子扣减用户 quota；不足时返回 ErrInsufficientQuota。
+// 通过 UPDATE ... WHERE quota >= ? 实现 CAS 语义，防止超扣；扣减成功后异步同步 Redis 缓存。
+func DeductUserQuotaIfSufficient(id int, quota int) error {
+	if quota < 0 {
+		return errors.New("quota 不能为负数！")
+	}
+	if quota == 0 {
+		return nil
+	}
+	res := DB.Model(&User{}).Where("id = ? AND quota >= ?", id, quota).
+		Update("quota", gorm.Expr("quota - ?", quota))
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return ErrInsufficientQuota
+	}
+	gopool.Go(func() {
+		if err := cacheDecrUserQuota(id, int64(quota)); err != nil {
+			common.SysLog("failed to decrease user quota cache: " + err.Error())
+		}
+	})
+	return nil
 }
 
 func DeltaUpdateUserQuota(id int, delta int) (err error) {

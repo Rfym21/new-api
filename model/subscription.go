@@ -165,6 +165,9 @@ type SubscriptionPlan struct {
 	// Max purchases per user (0 = unlimited)
 	MaxPurchasePerUser int `json:"max_purchase_per_user" gorm:"type:int;default:0"`
 
+	// AllowBalancePurchase 允许用户使用站内余额（quota）购买，默认关闭。
+	AllowBalancePurchase bool `json:"allow_balance_purchase" gorm:"default:false"`
+
 	// Upgrade user group after purchase (empty = no change)
 	UpgradeGroup string `json:"upgrade_group" gorm:"type:varchar(64);default:''"`
 

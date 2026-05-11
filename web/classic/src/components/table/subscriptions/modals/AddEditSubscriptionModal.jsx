@@ -97,6 +97,7 @@ const AddEditSubscriptionModal = ({
     upgrade_group: '',
     stripe_price_id: '',
     creem_product_id: '',
+    allow_balance_purchase: false,
   });
 
   const buildFormValues = () => {
@@ -123,6 +124,7 @@ const AddEditSubscriptionModal = ({
       upgrade_group: p.upgrade_group || '',
       stripe_price_id: p.stripe_price_id || '',
       creem_product_id: p.creem_product_id || '',
+      allow_balance_purchase: p.allow_balance_purchase === true,
     };
   };
 
@@ -164,6 +166,7 @@ const AddEditSubscriptionModal = ({
           max_purchase_per_user: Number(values.max_purchase_per_user || 0),
           total_amount: displayAmountToQuota(values.total_amount),
           upgrade_group: values.upgrade_group || '',
+          allow_balance_purchase: values.allow_balance_purchase === true,
         },
       };
       if (editingPlan?.plan?.id) {
@@ -375,6 +378,14 @@ const AddEditSubscriptionModal = ({
                       <Form.Switch
                         field='enabled'
                         label={t('启用状态')}
+                        size='large'
+                      />
+                    </Col>
+
+                    <Col span={12}>
+                      <Form.Switch
+                        field='allow_balance_purchase'
+                        label={t('允许余额购买')}
                         size='large'
                       />
                     </Col>

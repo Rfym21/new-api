@@ -198,6 +198,30 @@ const SubscriptionPlansCard = ({
     }
   };
 
+  const payBalance = async () => {
+    if (!selectedPlan?.plan?.allow_balance_purchase) {
+      showError(t('该套餐未开启余额购买'));
+      return;
+    }
+    setPaying(true);
+    try {
+      const res = await API.post('/api/subscription/balance/pay', {
+        plan_id: selectedPlan.plan.id,
+      });
+      if (res.data?.success) {
+        showSuccess(t('已使用余额购买订阅'));
+        closeBuy();
+        await reloadSubscriptionSelf?.();
+      } else {
+        showError(res.data?.message || t('支付失败'));
+      }
+    } catch (e) {
+      showError(t('支付请求失败'));
+    } finally {
+      setPaying(false);
+    }
+  };
+
   // 当前订阅信息 - 支持多个订阅
   const hasActiveSubscription = activeSubscriptions.length > 0;
   const hasAnySubscription = allSubscriptions.length > 0;
@@ -684,6 +708,7 @@ const SubscriptionPlansCard = ({
         onPayStripe={payStripe}
         onPayCreem={payCreem}
         onPayEpay={payEpay}
+        onPayBalance={payBalance}
       />
     </>
   );

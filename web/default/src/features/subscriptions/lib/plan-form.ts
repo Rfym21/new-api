@@ -25,6 +25,7 @@ export function getPlanFormSchema(t: TFunction) {
     upgrade_group: z.string().optional(),
     stripe_price_id: z.string().optional(),
     creem_product_id: z.string().optional(),
+    allow_balance_purchase: z.boolean(),
   })
 }
 
@@ -46,6 +47,7 @@ export const PLAN_FORM_DEFAULTS: PlanFormValues = {
   upgrade_group: '',
   stripe_price_id: '',
   creem_product_id: '',
+  allow_balance_purchase: false,
 }
 
 export function planToFormValues(plan: SubscriptionPlan): PlanFormValues {
@@ -65,6 +67,7 @@ export function planToFormValues(plan: SubscriptionPlan): PlanFormValues {
     upgrade_group: plan.upgrade_group || '',
     stripe_price_id: plan.stripe_price_id || '',
     creem_product_id: plan.creem_product_id || '',
+    allow_balance_purchase: plan.allow_balance_purchase === true,
   }
 }
 
@@ -85,6 +88,7 @@ export function formValuesToPlanPayload(values: PlanFormValues): PlanPayload {
       max_purchase_per_user: Number(values.max_purchase_per_user || 0),
       total_amount: Number(values.total_amount || 0),
       upgrade_group: values.upgrade_group || '',
+      allow_balance_purchase: values.allow_balance_purchase === true,
     },
   }
 }

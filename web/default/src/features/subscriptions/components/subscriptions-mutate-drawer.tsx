@@ -326,6 +326,24 @@ export function SubscriptionsMutateDrawer({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name='allow_balance_purchase'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-row items-center gap-2'>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className='!mt-0'>
+                        {t('Allow Balance Purchase')}
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
