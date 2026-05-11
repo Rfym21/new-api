@@ -38,6 +38,8 @@ const oauthSchema = z.object({
   'oidc.authorization_endpoint': z.string().optional(),
   'oidc.token_endpoint': z.string().optional(),
   'oidc.user_info_endpoint': z.string().optional(),
+  'oidc.display_name': z.string().optional(),
+  'oidc.icon_url': z.string().optional(),
   TelegramOAuthEnabled: z.boolean(),
   TelegramBotToken: z.string().optional(),
   TelegramBotName: z.string().optional(),
@@ -76,6 +78,8 @@ export function OAuthSection({ defaultValues }: OAuthSectionProps) {
       defaultValues['oidc.authorization_endpoint'] ?? '',
     'oidc.token_endpoint': defaultValues['oidc.token_endpoint'] ?? '',
     'oidc.user_info_endpoint': defaultValues['oidc.user_info_endpoint'] ?? '',
+    'oidc.display_name': defaultValues['oidc.display_name'] ?? '',
+    'oidc.icon_url': defaultValues['oidc.icon_url'] ?? '',
     TelegramBotToken: defaultValues.TelegramBotToken ?? '',
     TelegramBotName: defaultValues.TelegramBotName ?? '',
     LinuxDOClientId: defaultValues.LinuxDOClientId ?? '',
@@ -513,6 +517,54 @@ export function OAuthSection({ defaultValues }: OAuthSectionProps) {
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='oidc.display_name'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Display Name (Optional)')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t(
+                            'Custom button text, defaults to "Continue with OIDC"'
+                          )}
+                          autoComplete='off'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'Custom display name for the OIDC login button (e.g. SSO, Company Login)'
+                        )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='oidc.icon_url'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Icon URL (Optional)')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t('https://example.com/oidc-icon.svg')}
+                          autoComplete='off'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'URL of the icon shown on the OIDC login button. Leave empty for no icon.'
+                        )}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

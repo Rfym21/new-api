@@ -79,10 +79,24 @@ export function OAuthProviders({
   }
 
   if (status?.oidc_enabled) {
+    const oidcLabel = status.oidc_display_name?.trim()
+      ? t('Continue with {{name}}', { name: status.oidc_display_name })
+      : t('Continue with OIDC')
+    const oidcIconUrl = status.oidc_icon_url?.trim() || ''
     providerButtons.push({
       key: 'oidc',
-      label: t('Continue with OIDC'),
+      label: oidcLabel,
       onClick: handleOIDCLogin,
+      icon: oidcIconUrl ? (
+        <img
+          src={oidcIconUrl}
+          alt=''
+          className='h-4 w-4 object-contain'
+          onError={(event) => {
+            ;(event.currentTarget as HTMLImageElement).style.display = 'none'
+          }}
+        />
+      ) : undefined,
     })
   }
 
