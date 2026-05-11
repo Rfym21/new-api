@@ -77,16 +77,18 @@ function IconPicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type='button'
-          variant='outline'
-          className='justify-start gap-2'
-          aria-label={t('Pick icon')}
-        >
-          <Selected className='size-4' />
-          <span className='truncate text-xs'>{value || t('No icon')}</span>
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            type='button'
+            variant='outline'
+            className='justify-start gap-2'
+            aria-label={t('Pick icon')}
+          />
+        }
+      >
+        <Selected className='size-4' />
+        <span className='truncate text-xs'>{value || t('No icon')}</span>
       </PopoverTrigger>
       <PopoverContent className='w-80 p-3' align='start'>
         <Input

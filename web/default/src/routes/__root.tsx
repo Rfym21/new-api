@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { type QueryClient } from '@tanstack/react-query'
 import {
   createRootRouteWithContext,
@@ -6,19 +7,28 @@ import {
 } from '@tanstack/react-router'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { ThemeCustomizationProvider } from '@/context/theme-customization-provider'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { Toaster } from '@/components/ui/sonner'
 import { NavigationProgress } from '@/components/navigation-progress'
 import { GeneralError } from '@/features/errors/general-error'
 import { NotFoundError } from '@/features/errors/not-found-error'
 import { getSetupStatus } from '@/features/setup/api'
+import { saveAffiliateCode } from '@/features/auth/lib/storage'
 
 function RootComponent() {
   // Load system configuration (logo, system name, etc.) from backend
   useSystemConfig({ autoLoad: true })
 
+  useEffect(() => {
+    const aff = new URLSearchParams(window.location.search).get('aff')?.trim()
+    if (aff) {
+      saveAffiliateCode(aff)
+    }
+  }, [])
+
   return (
-    <>
+    <ThemeCustomizationProvider>
       <NavigationProgress />
       <Outlet />
       <Toaster duration={5000} />
@@ -28,7 +38,7 @@ function RootComponent() {
           <TanStackRouterDevtools position='bottom-right' />
         </>
       )}
-    </>
+    </ThemeCustomizationProvider>
   )
 }
 

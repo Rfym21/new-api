@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react'
 import * as z from 'zod'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,9 +28,13 @@ const quotaSchema = z.object({
   QuotaForInvitee: z.coerce.number().min(0),
   TopupRebateEnabled: z.boolean(),
   TopupRebateRatioForInviter: z.coerce.number().min(0).max(1),
-  TopUpLink: z.string().url().optional().or(z.literal('')),
-  'general_setting.docs_link': z.string().url().optional().or(z.literal('')),
-  'quota_setting.enable_free_model_pre_consume': z.boolean(),
+  TopUpLink: z.string(),
+  general_setting: z.object({
+    docs_link: z.string(),
+  }),
+  quota_setting: z.object({
+    enable_free_model_pre_consume: z.boolean(),
+  }),
 })
 
 type QuotaFormValues = z.infer<typeof quotaSchema>
@@ -43,6 +48,13 @@ export function QuotaSettingsSection({
 }: QuotaSettingsSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
+  const handleNumberChange =
+    (onChange: (value: number | string) => void) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onChange(
+        event.target.value === '' ? '' : event.currentTarget.valueAsNumber
+      )
+    }
 
   const { form, handleSubmit, isDirty, isSubmitting } =
     useSettingsForm<QuotaFormValues>({
@@ -81,8 +93,8 @@ export function QuotaSettingsSection({
                 <FormControl>
                   <Input
                     type='number'
-                    value={field.value as number}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    value={field.value ?? ''}
+                    onChange={handleNumberChange(field.onChange)}
                     name={field.name}
                     onBlur={field.onBlur}
                     ref={field.ref}
@@ -105,8 +117,8 @@ export function QuotaSettingsSection({
                 <FormControl>
                   <Input
                     type='number'
-                    value={field.value as number}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    value={field.value ?? ''}
+                    onChange={handleNumberChange(field.onChange)}
                     name={field.name}
                     onBlur={field.onBlur}
                     ref={field.ref}
@@ -129,8 +141,8 @@ export function QuotaSettingsSection({
                 <FormControl>
                   <Input
                     type='number'
-                    value={field.value as number}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    value={field.value ?? ''}
+                    onChange={handleNumberChange(field.onChange)}
                     name={field.name}
                     onBlur={field.onBlur}
                     ref={field.ref}
@@ -153,8 +165,8 @@ export function QuotaSettingsSection({
                 <FormControl>
                   <Input
                     type='number'
-                    value={field.value as number}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    value={field.value ?? ''}
+                    onChange={handleNumberChange(field.onChange)}
                     name={field.name}
                     onBlur={field.onBlur}
                     ref={field.ref}

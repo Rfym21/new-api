@@ -28,6 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -104,17 +105,27 @@ export function BillingHistoryDialog({
                 />
               </div>
               <Select
+                items={[
+                  { value: '10', label: t('10 / page') },
+                  { value: '20', label: t('20 / page') },
+                  { value: '50', label: t('50 / page') },
+                  { value: '100', label: t('100 / page') },
+                ]}
                 value={pageSize.toString()}
-                onValueChange={(value) => handlePageSizeChange(parseInt(value))}
+                onValueChange={(value) =>
+                  value !== null && handlePageSizeChange(parseInt(value))
+                }
               >
                 <SelectTrigger className='h-9 w-[92px] sm:w-32'>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='10'>{t('10 / page')}</SelectItem>
-                  <SelectItem value='20'>{t('20 / page')}</SelectItem>
-                  <SelectItem value='50'>{t('50 / page')}</SelectItem>
-                  <SelectItem value='100'>{t('100 / page')}</SelectItem>
+                <SelectContent alignItemWithTrigger={false}>
+                  <SelectGroup>
+                    <SelectItem value='10'>{t('10 / page')}</SelectItem>
+                    <SelectItem value='20'>{t('20 / page')}</SelectItem>
+                    <SelectItem value='50'>{t('50 / page')}</SelectItem>
+                    <SelectItem value='100'>{t('100 / page')}</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
@@ -147,8 +158,8 @@ export function BillingHistoryDialog({
                   </p>
                   <p className='mt-1 text-xs'>
                     {keyword
-                      ? 'Try adjusting your search'
-                      : 'Your transaction history will appear here'}
+                      ? t('Try adjusting your search')
+                      : t('Your transaction history will appear here')}
                   </p>
                 </div>
               ) : (
@@ -204,15 +215,15 @@ export function BillingHistoryDialog({
                         <div className='mt-3 grid grid-cols-2 gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-4'>
                           <div className='space-y-1'>
                             <Label className='text-muted-foreground text-xs'>
-                              Payment Method
+                              {t('Payment Method')}
                             </Label>
                             <div className='text-sm font-medium'>
-                              {getPaymentMethodName(record.payment_method)}
+                              {getPaymentMethodName(record.payment_method, t)}
                             </div>
                           </div>
                           <div className='space-y-1'>
                             <Label className='text-muted-foreground text-xs'>
-                              Amount
+                              {t('Amount')}
                             </Label>
                             <div className='text-sm font-semibold'>
                               {formatCurrencyFromUSD(record.amount, {
@@ -224,7 +235,7 @@ export function BillingHistoryDialog({
                           </div>
                           <div className='space-y-1'>
                             <Label className='text-muted-foreground text-xs'>
-                              Payment
+                              {t('Payment')}
                             </Label>
                             <div className='text-sm font-semibold text-red-600'>
                               {formatNumber(record.money)}
@@ -241,7 +252,7 @@ export function BillingHistoryDialog({
                               onClick={() => setConfirmTradeNo(record.trade_no)}
                               disabled={completing}
                             >
-                              Complete Order
+                              {t('Complete Order')}
                             </Button>
                           </div>
                         )}
@@ -312,7 +323,7 @@ export function BillingHistoryDialog({
               onClick={handleConfirmComplete}
               disabled={completing}
             >
-              {completing ? 'Processing...' : 'Confirm'}
+              {completing ? t('Processing...') : t('Confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
