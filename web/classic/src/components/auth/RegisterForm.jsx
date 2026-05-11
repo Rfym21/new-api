@@ -465,11 +465,34 @@ const RegisterForm = () => {
                     theme='outline'
                     className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
                     type='tertiary'
-                    icon={<OIDCIcon style={{ color: '#1877F2' }} />}
+                    icon={
+                      status.oidc_icon_url ? (
+                        <img
+                          src={status.oidc_icon_url}
+                          alt=''
+                          style={{
+                            width: 16,
+                            height: 16,
+                            objectFit: 'contain',
+                          }}
+                          onError={(event) => {
+                            event.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <OIDCIcon style={{ color: '#1877F2' }} />
+                      )
+                    }
                     onClick={handleOIDCClick}
                     loading={oidcLoading}
                   >
-                    <span className='ml-3'>{t('使用 OIDC 继续')}</span>
+                    <span className='ml-3'>
+                      {status.oidc_display_name
+                        ? t('使用 {{name}} 继续', {
+                            name: status.oidc_display_name,
+                          })
+                        : t('使用 OIDC 继续')}
+                    </span>
                   </Button>
                 )}
 

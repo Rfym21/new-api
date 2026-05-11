@@ -63,6 +63,8 @@ const SystemSetting = () => {
     'oidc.authorization_endpoint': '',
     'oidc.token_endpoint': '',
     'oidc.user_info_endpoint': '',
+    'oidc.display_name': '',
+    'oidc.icon_url': '',
     Notice: '',
     SMTPServer: '',
     SMTPPort: '',
@@ -572,6 +574,18 @@ const SystemSetting = () => {
       options.push({
         key: 'oidc.user_info_endpoint',
         value: inputs['oidc.user_info_endpoint'],
+      });
+    }
+    if (originInputs['oidc.display_name'] !== inputs['oidc.display_name']) {
+      options.push({
+        key: 'oidc.display_name',
+        value: inputs['oidc.display_name'],
+      });
+    }
+    if (originInputs['oidc.icon_url'] !== inputs['oidc.icon_url']) {
+      options.push({
+        key: 'oidc.icon_url',
+        value: inputs['oidc.icon_url'],
       });
     }
 
@@ -1420,6 +1434,26 @@ const SystemSetting = () => {
                         field="['oidc.user_info_endpoint']"
                         label={t('User Info Endpoint')}
                         placeholder={t('输入 OIDC 的 Userinfo Endpoint')}
+                      />
+                    </Col>
+                  </Row>
+                  <Row
+                    gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
+                  >
+                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                      <Form.Input
+                        field="['oidc.display_name']"
+                        label={t('显示名称（可选）')}
+                        placeholder={t(
+                          '自定义按钮文案，默认显示「使用 OIDC 继续」',
+                        )}
+                      />
+                    </Col>
+                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                      <Form.Input
+                        field="['oidc.icon_url']"
+                        label={t('图标 URL（可选）')}
+                        placeholder={t('https://example.com/oidc-icon.svg')}
                       />
                     </Col>
                   </Row>
