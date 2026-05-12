@@ -21,12 +21,12 @@ type FrontendAssets struct {
 }
 
 func SetWebRouter(router *gin.Engine, assets FrontendAssets) {
-	classicFS := common.EmbedFolder(assets.BuildFS, "web/classic/dist")
+	frontendFS := common.EmbedFolder(assets.BuildFS, "web/dist")
 
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
 	router.Use(webRateLimitSkipAssets())
 	router.Use(middleware.Cache())
-	router.Use(static.Serve("/", classicFS))
+	router.Use(static.Serve("/", frontendFS))
 	router.NoRoute(func(c *gin.Context) {
 		c.Set(middleware.RouteTagKey, "web")
 		if strings.HasPrefix(c.Request.RequestURI, "/v1") || strings.HasPrefix(c.Request.RequestURI, "/api") || strings.HasPrefix(c.Request.RequestURI, "/assets") {

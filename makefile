@@ -1,4 +1,4 @@
-FRONTEND_DIR = ./web/classic
+FRONTEND_DIR = ./web
 BACKEND_DIR = .
 
 .PHONY: all build-frontend start-backend dev dev-api dev-web
@@ -6,8 +6,8 @@ BACKEND_DIR = .
 all: build-frontend start-backend
 
 build-frontend:
-	@echo "Building classic frontend..."
-	@cd $(FRONTEND_DIR) && bun install && VITE_REACT_APP_VERSION=$(cat ../../VERSION) bun run build
+	@echo "Building frontend..."
+	@cd $(FRONTEND_DIR) && bun install && VITE_REACT_APP_VERSION=$(cat ../VERSION) bun run build
 
 start-backend:
 	@echo "Starting backend dev server..."
@@ -18,7 +18,7 @@ dev-api:
 	@docker compose -f docker-compose.dev.yml up -d
 
 dev-web:
-	@echo "Starting classic frontend dev server..."
+	@echo "Starting frontend dev server..."
 	@cd $(FRONTEND_DIR) && bun install && bun run dev
 
 dev: dev-api dev-web

@@ -35,10 +35,10 @@ import (
 	_ "net/http/pprof"
 )
 
-//go:embed web/classic/dist
+//go:embed web/dist
 var classicBuildFS embed.FS
 
-//go:embed web/classic/dist/index.html
+//go:embed web/dist/index.html
 var classicIndexPage []byte
 
 func main() {
