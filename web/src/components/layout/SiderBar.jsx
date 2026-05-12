@@ -46,8 +46,6 @@ const routerMap = {
   pricing: '/pricing',
   task: '/console/task',
   models: '/console/models',
-  deployment: '/console/deployment',
-  playground: '/console/playground',
   personal: '/console/personal',
 };
 
@@ -166,12 +164,6 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {
-        text: t('模型部署'),
-        itemKey: 'deployment',
-        to: '/deployment',
-        className: isAdmin() ? '' : 'tableHiddle',
-      },
-      {
         text: t('兑换码管理'),
         itemKey: 'redemption',
         to: '/redemption',
@@ -202,11 +194,6 @@ const SiderBar = ({ onNavigate = () => {} }) => {
 
   const chatMenuItems = useMemo(() => {
     const items = [
-      {
-        text: t('操练场'),
-        itemKey: 'playground',
-        to: '/playground',
-      },
       {
         text: t('聊天'),
         itemKey: 'chat',

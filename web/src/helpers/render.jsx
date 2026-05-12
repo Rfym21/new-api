@@ -65,7 +65,6 @@ import {
 
 import {
   LayoutDashboard,
-  TerminalSquare,
   MessageSquare,
   Key,
   BarChart3,
@@ -124,8 +123,6 @@ export function getLucideIcon(key, selected = false) {
   switch (key) {
     case 'detail':
       return <LayoutDashboard {...commonProps} color={iconColor} />;
-    case 'playground':
-      return <TerminalSquare {...commonProps} color={iconColor} />;
     case 'chat':
       return <MessageSquare {...commonProps} color={iconColor} />;
     case 'token':
@@ -147,8 +144,6 @@ export function getLucideIcon(key, selected = false) {
       return <User {...commonProps} color={iconColor} />;
     case 'models':
       return <Package {...commonProps} color={iconColor} />;
-    case 'deployment':
-      return <Server {...commonProps} color={iconColor} />;
     case 'subscription':
       return <CalendarClock {...commonProps} color={iconColor} />;
     case 'setting':

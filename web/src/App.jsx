@@ -42,8 +42,6 @@ import Midjourney from './pages/Midjourney';
 import Pricing from './pages/Pricing';
 import Task from './pages/Task';
 import ModelPage from './pages/Model';
-import ModelDeploymentPage from './pages/ModelDeployment';
-import Playground from './pages/Playground';
 import Subscription from './pages/Subscription';
 import OAuth2Callback from './components/auth/OAuth2Callback';
 import PersonalSetting from './components/settings/PersonalSetting';
@@ -116,14 +114,6 @@ function App() {
           }
         />
         <Route
-          path='/console/deployment'
-          element={
-            <AdminRoute>
-              <ModelDeploymentPage />
-            </AdminRoute>
-          }
-        />
-        <Route
           path='/console/subscription'
           element={
             <AdminRoute>
@@ -144,14 +134,6 @@ function App() {
           element={
             <PrivateRoute>
               <Token />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path='/console/playground'
-          element={
-            <PrivateRoute>
-              <Playground />
             </PrivateRoute>
           }
         />

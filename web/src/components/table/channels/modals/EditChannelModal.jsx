@@ -388,8 +388,6 @@ const EditChannelModal = (props) => {
       };
     }
   }, [inputs.param_override, t]);
-  const [isIonetChannel, setIsIonetChannel] = useState(false);
-  const [ionetMetadata, setIonetMetadata] = useState(null);
   const [codexOAuthModalVisible, setCodexOAuthModalVisible] = useState(false);
   const [codexCredentialRefreshing, setCodexCredentialRefreshing] =
     useState(false);
@@ -406,20 +404,6 @@ const EditChannelModal = (props) => {
   const [show2FAVerifyModal, setShow2FAVerifyModal] = useState(false);
   const [verifyCode, setVerifyCode] = useState('');
 
-  useEffect(() => {
-    if (!isEdit) {
-      setIsIonetChannel(false);
-      setIonetMetadata(null);
-    }
-  }, [isEdit]);
-
-  const handleOpenIonetDeployment = () => {
-    if (!ionetMetadata?.deployment_id) {
-      return;
-    }
-    const targetUrl = `/console/deployment?deployment_id=${ionetMetadata.deployment_id}`;
-    window.open(targetUrl, '_blank', 'noopener');
-  };
   const [verifyLoading, setVerifyLoading] = useState(false);
   const statusCodeRiskConfirmResolverRef = useRef(null);
   const [statusCodeRiskConfirmVisible, setStatusCodeRiskConfirmVisible] =
@@ -610,16 +594,7 @@ const EditChannelModal = (props) => {
     }
   };
 
-  const isIonetLocked = isIonetChannel && isEdit;
-
   const handleInputChange = (name, value) => {
-    if (
-      isIonetChannel &&
-      isEdit &&
-      ['type', 'key', 'base_url'].includes(name)
-    ) {
-      return;
-    }
     if (formApiRef.current) {
       formApiRef.current.setValue(name, value);
     }
@@ -1054,25 +1029,6 @@ const EditChannelModal = (props) => {
         .filter(Boolean);
       initialModelMappingRef.current = data.model_mapping || '';
       initialStatusCodeMappingRef.current = data.status_code_mapping || '';
-
-      let parsedIonet = null;
-      if (data.other_info) {
-        try {
-          const maybeMeta = JSON.parse(data.other_info);
-          if (
-            maybeMeta &&
-            typeof maybeMeta === 'object' &&
-            maybeMeta.source === 'ionet'
-          ) {
-            parsedIonet = maybeMeta;
-          }
-        } catch (error) {
-          // ignore parse error
-        }
-      }
-      const managedByIonet = !!parsedIonet;
-      setIsIonetChannel(managedByIonet);
-      setIonetMetadata(parsedIonet);
 
       // Smart expand: auto-open advanced settings if any advanced field has a value
       const hasAdvancedValues =
@@ -2876,31 +2832,6 @@ const EditChannelModal = (props) => {
                     </div>
                   </div>
 
-                    {isIonetChannel && (
-                      <Banner
-                        type='info'
-                        closeIcon={null}
-                        className='mb-4 rounded-xl'
-                        description={t(
-                          '此渠道由 IO.NET 自动同步，类型、密钥和 API 地址已锁定。',
-                        )}
-                      >
-                        <Space>
-                          {ionetMetadata?.deployment_id && (
-                            <Button
-                              size='small'
-                              theme='light'
-                              type='primary'
-                              icon={<IconGlobe />}
-                              onClick={handleOpenIonetDeployment}
-                            >
-                              {t('查看关联部署')}
-                            </Button>
-                          )}
-                        </Space>
-                      </Banner>
-                    )}
-
                     <Form.Select
                       field='type'
                       label={t('类型')}
@@ -2914,7 +2845,7 @@ const EditChannelModal = (props) => {
                       onSearch={(value) => setChannelSearchValue(value)}
                       renderOptionItem={renderChannelOption}
                       onChange={(value) => handleInputChange('type', value)}
-                      disabled={isIonetLocked}
+                      
                     />
 
                     {inputs.type === 57 && (
@@ -3070,7 +3001,7 @@ const EditChannelModal = (props) => {
                           autosize
                           autoComplete='new-password'
                           onChange={(value) => handleInputChange('key', value)}
-                          disabled={isIonetLocked}
+                          
                           extraText={
                             <div className='flex items-center gap-2 flex-wrap'>
                               {isEdit &&
@@ -3126,7 +3057,7 @@ const EditChannelModal = (props) => {
                               onChange={(value) =>
                                 handleInputChange('key', value)
                               }
-                              disabled={isIonetLocked}
+                              
                               extraText={
                                 <div className='flex flex-col gap-2'>
                                   <Text type='tertiary' size='small'>
@@ -3143,7 +3074,7 @@ const EditChannelModal = (props) => {
                                       onClick={() =>
                                         setCodexOAuthModalVisible(true)
                                       }
-                                      disabled={isIonetLocked}
+                                      
                                     >
                                       {t('Codex 授权')}
                                     </Button>
@@ -3154,7 +3085,7 @@ const EditChannelModal = (props) => {
                                         theme='outline'
                                         onClick={handleRefreshCodexCredential}
                                         loading={codexCredentialRefreshing}
-                                        disabled={isIonetLocked}
+                                        
                                       >
                                         {t('刷新凭证')}
                                       </Button>
@@ -3164,7 +3095,7 @@ const EditChannelModal = (props) => {
                                       type='primary'
                                       theme='outline'
                                       onClick={() => formatJsonField('key')}
-                                      disabled={isIonetLocked}
+                                      
                                     >
                                       {t('格式化')}
                                     </Button>
@@ -3174,7 +3105,7 @@ const EditChannelModal = (props) => {
                                         type='primary'
                                         theme='outline'
                                         onClick={handleShow2FAModal}
-                                        disabled={isIonetLocked}
+                                        
                                       >
                                         {t('查看密钥')}
                                       </Button>
@@ -3573,7 +3504,7 @@ const EditChannelModal = (props) => {
                                 handleInputChange('base_url', value)
                               }
                               showClear
-                              disabled={isIonetLocked}
+                              
                             />
                           </div>
                           <div>
@@ -3628,7 +3559,7 @@ const EditChannelModal = (props) => {
                                 handleInputChange('base_url', value)
                               }
                               showClear
-                              disabled={isIonetLocked}
+                              
                             />
                           </div>
                         </>
@@ -3660,7 +3591,7 @@ const EditChannelModal = (props) => {
                                 handleInputChange('base_url', value)
                               }
                               showClear
-                              disabled={isIonetLocked}
+                              
                               extraText={t(
                                 '对于官方渠道，new-api已经内置地址，除非是第三方代理站点或者Azure的特殊接入地址，否则不需要填写',
                               )}
@@ -3680,7 +3611,7 @@ const EditChannelModal = (props) => {
                               handleInputChange('base_url', value)
                             }
                             showClear
-                            disabled={isIonetLocked}
+                            
                           />
                         </div>
                       )}
@@ -3699,7 +3630,7 @@ const EditChannelModal = (props) => {
                               handleInputChange('base_url', value)
                             }
                             showClear
-                            disabled={isIonetLocked}
+                            
                           />
                         </div>
                       )}
@@ -3731,7 +3662,7 @@ const EditChannelModal = (props) => {
                               },
                             ]}
                             defaultValue='https://ark.cn-beijing.volces.com'
-                            disabled={isIonetLocked}
+                            
                           />
                         </div>
                       )}

@@ -53,11 +53,6 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/:provider", middleware.CriticalRateLimit(), controller.HandleOAuth)
 		apiRouter.GET("/ratio_config", middleware.CriticalRateLimit(), controller.GetRatioConfig)
 
-		apiRouter.POST("/stripe/webhook", controller.StripeWebhook)
-		apiRouter.POST("/creem/webhook", controller.CreemWebhook)
-		apiRouter.POST("/waffo/webhook", controller.WaffoWebhook)
-		//apiRouter.POST("/waffo-pancake/webhook", controller.WaffoPancakeWebhook)
-
 		// Universal secure verification routes
 		apiRouter.POST("/verify", middleware.UserAuth(), middleware.CriticalRateLimit(), controller.UniversalVerify)
 
@@ -95,13 +90,6 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/topup", middleware.CriticalRateLimit(), controller.TopUp)
 				selfRoute.POST("/pay", middleware.CriticalRateLimit(), controller.RequestEpay)
 				selfRoute.POST("/amount", controller.RequestAmount)
-				selfRoute.POST("/stripe/pay", middleware.CriticalRateLimit(), controller.RequestStripePay)
-				selfRoute.POST("/stripe/amount", controller.RequestStripeAmount)
-				selfRoute.POST("/creem/pay", middleware.CriticalRateLimit(), controller.RequestCreemPay)
-				selfRoute.POST("/waffo/amount", controller.RequestWaffoAmount)
-				selfRoute.POST("/waffo/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPay)
-				//selfRoute.POST("/waffo-pancake/amount", controller.RequestWaffoPancakeAmount)
-				//selfRoute.POST("/waffo-pancake/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPancakePay)
 				selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 
@@ -360,32 +348,6 @@ func SetApiRouter(router *gin.Engine) {
 			modelsRoute.POST("/", controller.CreateModelMeta)
 			modelsRoute.PUT("/", controller.UpdateModelMeta)
 			modelsRoute.DELETE("/:id", controller.DeleteModelMeta)
-		}
-
-		// Deployments (model deployment management)
-		deploymentsRoute := apiRouter.Group("/deployments")
-		deploymentsRoute.Use(middleware.AdminAuth())
-		{
-			deploymentsRoute.GET("/settings", controller.GetModelDeploymentSettings)
-			deploymentsRoute.POST("/settings/test-connection", controller.TestIoNetConnection)
-			deploymentsRoute.GET("/", controller.GetAllDeployments)
-			deploymentsRoute.GET("/search", controller.SearchDeployments)
-			deploymentsRoute.POST("/test-connection", controller.TestIoNetConnection)
-			deploymentsRoute.GET("/hardware-types", controller.GetHardwareTypes)
-			deploymentsRoute.GET("/locations", controller.GetLocations)
-			deploymentsRoute.GET("/available-replicas", controller.GetAvailableReplicas)
-			deploymentsRoute.POST("/price-estimation", controller.GetPriceEstimation)
-			deploymentsRoute.GET("/check-name", controller.CheckClusterNameAvailability)
-			deploymentsRoute.POST("/", controller.CreateDeployment)
-
-			deploymentsRoute.GET("/:id", controller.GetDeployment)
-			deploymentsRoute.GET("/:id/logs", controller.GetDeploymentLogs)
-			deploymentsRoute.GET("/:id/containers", controller.ListDeploymentContainers)
-			deploymentsRoute.GET("/:id/containers/:container_id", controller.GetContainerDetails)
-			deploymentsRoute.PUT("/:id", controller.UpdateDeployment)
-			deploymentsRoute.PUT("/:id/name", controller.UpdateDeploymentName)
-			deploymentsRoute.POST("/:id/extend", controller.ExtendDeployment)
-			deploymentsRoute.DELETE("/:id", controller.DeleteDeployment)
 		}
 	}
 }
