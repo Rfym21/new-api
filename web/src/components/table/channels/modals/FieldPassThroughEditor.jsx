@@ -131,7 +131,7 @@ const FieldPassThroughEditor = ({
         onChange={setActiveTab}
       >
         <TabPane tab={t('可视化编辑')} itemKey='visual'>
-          <div className='flex flex-col gap-2'>
+          <div className='flex flex-col gap-3'>
             {(rules || []).length === 0 ? (
               <div className='py-6 text-center text-xs text-gray-400'>
                 <div className='mb-2'>{t('暂无规则，点击下方"新增字段"添加')}</div>
@@ -152,26 +152,24 @@ const FieldPassThroughEditor = ({
               </div>
             ) : (
               <>
-                <div className='hidden md:grid grid-cols-12 gap-2 text-xs text-gray-500 px-1'>
-                  <div className='col-span-4'>{t('字段名')}</div>
-                  <div className='col-span-2'>{t('开关')}</div>
-                  <div className='col-span-5'>{t('备注')}</div>
-                  <div className='col-span-1'></div>
-                </div>
                 {rules.map((rule, idx) => (
                   <div
                     key={idx}
-                    className='grid grid-cols-12 gap-2 items-center'
+                    className='grid grid-cols-1 gap-2 px-3 py-3 rounded-md'
+                    style={{
+                      backgroundColor: 'var(--semi-color-fill-0)',
+                      border: '1px solid var(--semi-color-fill-2)',
+                    }}
                   >
-                    <div className='col-span-12 md:col-span-4'>
+                    <div className='flex items-center gap-2'>
                       <Input
-                        size='small'
+                        size='default'
                         value={rule.field}
                         placeholder={placeholder}
+                        prefix={<span className='text-xs text-gray-400 px-1'>{t('字段名')}</span>}
                         onChange={(value) => updateRule(idx, { field: value })}
+                        className='flex-1 min-w-0'
                       />
-                    </div>
-                    <div className='col-span-6 md:col-span-2'>
                       <Switch
                         size='default'
                         checked={rule.enabled === true}
@@ -181,26 +179,21 @@ const FieldPassThroughEditor = ({
                           updateRule(idx, { enabled: value })
                         }
                       />
-                    </div>
-                    <div className='col-span-12 md:col-span-5'>
-                      <Input
-                        size='small'
-                        value={rule.comment}
-                        placeholder={t('备注（可选）')}
-                        onChange={(value) =>
-                          updateRule(idx, { comment: value })
-                        }
-                      />
-                    </div>
-                    <div className='col-span-6 md:col-span-1 flex justify-end'>
                       <Button
-                        size='small'
+                        size='default'
                         type='danger'
                         theme='borderless'
                         icon={<IconDelete />}
                         onClick={() => removeRule(idx)}
                       />
                     </div>
+                    <Input
+                      size='small'
+                      value={rule.comment}
+                      placeholder={t('备注（可选）')}
+                      prefix={<span className='text-xs text-gray-400 px-1'>{t('备注')}</span>}
+                      onChange={(value) => updateRule(idx, { comment: value })}
+                    />
                   </div>
                 ))}
                 <div>
