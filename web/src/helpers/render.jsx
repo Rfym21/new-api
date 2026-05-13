@@ -170,9 +170,22 @@ export function getLucideIconByName(name, selected = false) {
 }
 
 export function listLucideIconNames() {
+  // lucide-react v0.5xx 起多数图标通过 forwardRef 暴露为对象（typeof === 'object'），
+  // 而工厂函数（createLucideIcon）以及其他非组件导出仍可能是函数或字典。
+  // 这里只挑大写字母开头、且能作为 React 组件渲染的项：function（旧版）或 forwardRef 对象。
+  const blacklist = new Set(['createLucideIcon', 'Icon']);
   return Object.keys(LucideIcons)
-    .filter((name) => /^[A-Z]/.test(name))
-    .filter((name) => typeof LucideIcons[name] === 'function')
+    .filter((name) => /^[A-Z]/.test(name) && !blacklist.has(name))
+    .filter((name) => {
+      const item = LucideIcons[name];
+      if (!item) return false;
+      if (typeof item === 'function') return true;
+      // forwardRef / memo 包装：对象，自带 $$typeof 或 render
+      return (
+        typeof item === 'object' &&
+        (typeof item.render === 'function' || item.$$typeof !== undefined)
+      );
+    })
     .sort();
 }
 

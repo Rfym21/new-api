@@ -16,6 +16,7 @@ import {
   Form,
   Button,
   Input,
+  AutoComplete,
   Popover,
   Typography,
   Space,
@@ -170,6 +171,28 @@ export default function SettingsSidebarCustomItems(props) {
   );
   const [saving, setSaving] = useState(false);
 
+  // 内置侧栏分组 + 当前已配置过的自定义分组，作为 AutoComplete 的可选项
+  const groupOptions = useMemo(() => {
+    const builtin = [
+      { value: t('工作台'), label: t('工作台') },
+      { value: t('管理员'), label: t('管理员') },
+      { value: t('个人中心'), label: t('个人中心') },
+      { value: t('自定义'), label: t('自定义') },
+    ];
+    const customNames = Array.from(
+      new Set(
+        items
+          .map((it) => (it.group || '').trim())
+          .filter(
+            (g) =>
+              g &&
+              !builtin.some((b) => b.value === g),
+          ),
+      ),
+    ).map((g) => ({ value: g, label: g }));
+    return [...builtin, ...customNames];
+  }, [items, t]);
+
   useEffect(() => {
     setItems(safeParse(props.options?.SidebarCustomItems || '[]'));
   }, [props.options?.SidebarCustomItems]);
@@ -289,11 +312,13 @@ export default function SettingsSidebarCustomItems(props) {
                 <Form.Section>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <Text size='small' type='tertiary'>{t('分组')}</Text>
-                    <Input
+                    <AutoComplete
+                      data={groupOptions}
                       value={item.group}
                       onChange={(v) => handleChange(item.id, { group: v })}
-                      placeholder={t('自定义')}
-                      style={{ width: 120 }}
+                      placeholder={t('选择或输入分组')}
+                      style={{ width: 160 }}
+                      emptyContent={null}
                     />
                   </div>
                 </Form.Section>
