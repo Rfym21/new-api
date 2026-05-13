@@ -891,56 +891,6 @@
         ]
       }
     },
-    "/api/oauth/wechat": {
-      "get": {
-        "summary": "微信OAuth登录",
-        "deprecated": false,
-        "description": "🔓 无需鉴权（OAuth回调）",
-        "tags": [
-          "OAuth"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "Combination343": []
-          },
-          {
-            "Combination1243": []
-          }
-        ]
-      }
-    },
-    "/api/oauth/wechat/bind": {
-      "get": {
-        "summary": "绑定微信",
-        "deprecated": false,
-        "description": "🔓 无需鉴权",
-        "tags": [
-          "OAuth"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "Combination343": []
-          },
-          {
-            "Combination1243": []
-          }
-        ]
-      }
-    },
     "/api/oauth/email/bind": {
       "get": {
         "summary": "绑定邮箱",
