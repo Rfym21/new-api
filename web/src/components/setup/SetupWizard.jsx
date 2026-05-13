@@ -194,7 +194,6 @@ const SetupWizard = () => {
     const formValues = { ...values };
     const usageMode = values.usageMode;
     formValues.SelfUseModeEnabled = usageMode === 'self';
-    formValues.DemoSiteEnabled = usageMode === 'demo';
 
     // Remove usageMode as it's not needed by the backend
     delete formValues.usageMode;

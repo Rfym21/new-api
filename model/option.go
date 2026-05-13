@@ -122,7 +122,6 @@ func InitOptionMap() {
 	common.OptionMap["DataExportDefaultTime"] = common.DataExportDefaultTime
 	common.OptionMap["DefaultCollapseSidebar"] = strconv.FormatBool(common.DefaultCollapseSidebar)
 	common.OptionMap["CheckSensitiveEnabled"] = strconv.FormatBool(setting.CheckSensitiveEnabled)
-	common.OptionMap["DemoSiteEnabled"] = strconv.FormatBool(operation_setting.DemoSiteEnabled)
 	common.OptionMap["SelfUseModeEnabled"] = strconv.FormatBool(operation_setting.SelfUseModeEnabled)
 	common.OptionMap["ModelRequestRateLimitEnabled"] = strconv.FormatBool(setting.ModelRequestRateLimitEnabled)
 	common.OptionMap["CheckSensitiveOnPromptEnabled"] = strconv.FormatBool(setting.CheckSensitiveOnPromptEnabled)
@@ -253,8 +252,6 @@ func updateOptionMap(key string, value string) (err error) {
 			common.DefaultCollapseSidebar = boolValue
 		case "CheckSensitiveEnabled":
 			setting.CheckSensitiveEnabled = boolValue
-		case "DemoSiteEnabled":
-			operation_setting.DemoSiteEnabled = boolValue
 		case "SelfUseModeEnabled":
 			operation_setting.SelfUseModeEnabled = boolValue
 		case "CheckSensitiveOnPromptEnabled":

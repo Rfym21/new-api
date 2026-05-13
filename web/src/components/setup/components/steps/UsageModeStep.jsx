@@ -55,13 +55,6 @@ const UsageModeStep = ({
         >
           {t('自用模式')}
         </Radio>
-        <Radio
-          value='demo'
-          extra={t('适用于展示系统功能的场景，提供基础功能演示')}
-          style={{ width: '30%', minWidth: 200 }}
-        >
-          {t('演示站点模式')}
-        </Radio>
       </RadioGroup>
       {renderNavigationButtons && renderNavigationButtons()}
     </>

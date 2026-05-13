@@ -178,11 +178,9 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 	defer func() {
 		// Only return quota if downstream failed and quota was actually pre-consumed
 		if newAPIError != nil {
-			newAPIError = service.NormalizeViolationFeeError(newAPIError)
 			if relayInfo.Billing != nil {
 				relayInfo.Billing.Refund(c)
 			}
-			service.ChargeViolationFeeIfNeeded(c, relayInfo, newAPIError)
 		}
 	}()
 
@@ -233,7 +231,6 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 			return
 		}
 
-		newAPIError = service.NormalizeViolationFeeError(newAPIError)
 		relayInfo.LastError = newAPIError
 
 		processChannelError(c, *types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, common.GetContextKeyString(c, constant.ContextKeyChannelKey), channel.GetAutoBan()), newAPIError)

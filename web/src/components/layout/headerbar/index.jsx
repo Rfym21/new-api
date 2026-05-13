@@ -41,7 +41,6 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
     isNewYear,
     isSelfUseMode,
     docsLink,
-    isDemoSiteMode,
     isConsoleRoute,
     theme,
     headerNavModules,
@@ -94,7 +93,6 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
               isLoading={isLoading}
               systemName={systemName}
               isSelfUseMode={isSelfUseMode}
-              isDemoSiteMode={isDemoSiteMode}
               t={t}
             />
           </div>

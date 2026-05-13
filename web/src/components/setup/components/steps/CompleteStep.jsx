@@ -61,9 +61,7 @@ const CompleteStep = ({
         <Descriptions.Item itemKey={t('使用模式')}>
           {formData.usageMode === 'external'
             ? t('对外运营模式')
-            : formData.usageMode === 'self'
-              ? t('自用模式')
-              : t('演示站点模式')}
+            : t('自用模式')}
         </Descriptions.Item>
       </Descriptions>
 

@@ -49,7 +49,6 @@ const OperationSetting = () => {
     'general_setting.quota_display_type': 'USD',
     DisplayTokenStatEnabled: false,
     DefaultCollapseSidebar: false,
-    DemoSiteEnabled: false,
     SelfUseModeEnabled: false,
 
     /* 顶栏模块管理 */
