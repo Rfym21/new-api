@@ -61,7 +61,6 @@ import {
 import ModelSelectModal from './ModelSelectModal';
 import SingleModelSelectModal from './SingleModelSelectModal';
 import OllamaModelModal from './OllamaModelModal';
-import CodexOAuthModal from './CodexOAuthModal';
 import ParamOverrideEditorModal from './ParamOverrideEditorModal';
 import JSONEditor from '../../../common/ui/JSONEditor';
 import SecureVerificationModal from '../../../common/modals/SecureVerificationModal';
@@ -388,9 +387,6 @@ const EditChannelModal = (props) => {
       };
     }
   }, [inputs.param_override, t]);
-  const [codexOAuthModalVisible, setCodexOAuthModalVisible] = useState(false);
-  const [codexCredentialRefreshing, setCodexCredentialRefreshing] =
-    useState(false);
   const [paramOverrideEditorVisible, setParamOverrideEditorVisible] =
     useState(false);
 
