@@ -71,9 +71,6 @@ const SystemSetting = () => {
     SMTPAccount: '',
     SMTPFrom: '',
     SMTPToken: '',
-    WorkerUrl: '',
-    WorkerValidKey: '',
-    WorkerAllowHttpImageRequestEnabled: '',
     Footer: '',
     TurnstileCheckEnabled: '',
     TurnstileSiteKey: '',
@@ -186,7 +183,6 @@ const SystemSetting = () => {
           case 'oidc.enabled':
           case 'passkey.enabled':
           case 'passkey.allow_insecure_origin':
-          case 'WorkerAllowHttpImageRequestEnabled':
             item.value = toBoolean(item.value);
             break;
           case 'passkey.origins':
@@ -294,21 +290,6 @@ const SystemSetting = () => {
 
   const handleFormChange = (values) => {
     setInputs(values);
-  };
-
-  const submitWorker = async () => {
-    let WorkerUrl = removeTrailingSlash(inputs.WorkerUrl);
-    const options = [
-      { key: 'WorkerUrl', value: WorkerUrl },
-      {
-        key: 'WorkerAllowHttpImageRequestEnabled',
-        value: inputs.WorkerAllowHttpImageRequestEnabled ? 'true' : 'false',
-      },
-    ];
-    if (inputs.WorkerValidKey !== '' || WorkerUrl === '') {
-      options.push({ key: 'WorkerValidKey', value: inputs.WorkerValidKey });
-    }
-    await updateOptions(options);
   };
 
   const submitServerAddress = async () => {
@@ -708,55 +689,6 @@ const SystemSetting = () => {
                   <Button onClick={submitServerAddress}>
                     {t('更新服务器地址')}
                   </Button>
-                </Form.Section>
-              </Card>
-
-              <Card>
-                <Form.Section text={t('代理设置')}>
-                  <Banner
-                    type='info'
-                    description={t(
-                      '此代理仅用于图片请求转发，Webhook通知发送等，AI API请求仍然由服务器直接发出，可在渠道设置中单独配置代理',
-                    )}
-                    style={{ marginBottom: 20, marginTop: 16 }}
-                  />
-                  <Text>
-                    {t('仅支持')}{' '}
-                    <a
-                      href='https://github.com/Calcium-Ion/new-api-worker'
-                      target='_blank'
-                      rel='noreferrer'
-                    >
-                      new-api-worker
-                    </a>{' '}
-                    {t('或其兼容new-api-worker格式的其他版本')}
-                  </Text>
-                  <Row
-                    gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
-                  >
-                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
-                      <Form.Input
-                        field='WorkerUrl'
-                        label={t('Worker地址')}
-                        placeholder='例如：https://workername.yourdomain.workers.dev'
-                      />
-                    </Col>
-                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
-                      <Form.Input
-                        field='WorkerValidKey'
-                        label={t('Worker密钥')}
-                        placeholder='敏感信息不会发送到前端显示'
-                        type='password'
-                      />
-                    </Col>
-                  </Row>
-                  <Form.Checkbox
-                    field='WorkerAllowHttpImageRequestEnabled'
-                    noLabel
-                  >
-                    {t('允许 HTTP 协议图片请求（适用于自部署代理）')}
-                  </Form.Checkbox>
-                  <Button onClick={submitWorker}>{t('更新Worker设置')}</Button>
                 </Form.Section>
               </Card>
 

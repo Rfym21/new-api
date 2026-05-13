@@ -29,7 +29,6 @@ import {
   Cog,
   MoreHorizontal,
   LayoutDashboard,
-  Palette,
   CreditCard,
   Activity,
 } from 'lucide-react';
@@ -42,7 +41,6 @@ import RateLimitSetting from '../../components/settings/RateLimitSetting';
 import ModelSetting from '../../components/settings/ModelSetting';
 import DashboardSetting from '../../components/settings/DashboardSetting';
 import RatioSetting from '../../components/settings/RatioSetting';
-import DrawingSetting from '../../components/settings/DrawingSetting';
 import PaymentSetting from '../../components/settings/PaymentSetting';
 import PerformanceSetting from '../../components/settings/PerformanceSetting';
 
@@ -73,16 +71,6 @@ const Setting = () => {
       ),
       content: <DashboardSetting />,
       itemKey: 'dashboard',
-    });
-    panes.push({
-      tab: (
-        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <Palette size={18} />
-          {t('绘图设置')}
-        </span>
-      ),
-      content: <DrawingSetting />,
-      itemKey: 'drawing',
     });
     panes.push({
       tab: (
