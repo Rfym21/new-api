@@ -37,6 +37,7 @@ const LogsActions = ({
   const placeholder = (
     <Space>
       <Skeleton.Title style={{ width: 108, height: 21, borderRadius: 6 }} />
+      <Skeleton.Title style={{ width: 108, height: 21, borderRadius: 6 }} />
       <Skeleton.Title style={{ width: 65, height: 21, borderRadius: 6 }} />
       <Skeleton.Title style={{ width: 64, height: 21, borderRadius: 6 }} />
     </Space>
@@ -56,6 +57,17 @@ const LogsActions = ({
             className='!rounded-lg'
           >
             {t('消耗额度')}: {renderQuota(stat.quota)}
+          </Tag>
+          <Tag
+            color='violet'
+            style={{
+              fontWeight: 500,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              padding: 13,
+            }}
+            className='!rounded-lg'
+          >
+            {t('每分钟消耗')}: {renderQuota(stat.qpm || 0)}
           </Tag>
           <Tag
             color='pink'
