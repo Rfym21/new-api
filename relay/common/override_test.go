@@ -2059,7 +2059,9 @@ func TestRemoveDisabledFieldsAllowInferenceGeo(t *testing.T) {
 		"store":true
 	}`
 	settings := dto.ChannelOtherSettings{
-		AllowInferenceGeo: true,
+		BodyFieldPassThrough: []dto.FieldPassThroughRule{
+			{Field: "inference_geo", Enabled: true},
+		},
 	}
 
 	out, err := RemoveDisabledFields([]byte(input), settings, false)
@@ -2075,7 +2077,9 @@ func TestRemoveDisabledFieldsAllowSpeed(t *testing.T) {
 		"store":true
 	}`
 	settings := dto.ChannelOtherSettings{
-		AllowSpeed: true,
+		BodyFieldPassThrough: []dto.FieldPassThroughRule{
+			{Field: "speed", Enabled: true},
+		},
 	}
 
 	out, err := RemoveDisabledFields([]byte(input), settings, false)

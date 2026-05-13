@@ -61,6 +61,7 @@ import {
 import ModelSelectModal from './ModelSelectModal';
 import SingleModelSelectModal from './SingleModelSelectModal';
 import OllamaModelModal from './OllamaModelModal';
+import FieldPassThroughEditor from './FieldPassThroughEditor';
 import ParamOverrideEditorModal from './ParamOverrideEditorModal';
 import JSONEditor from '../../../common/ui/JSONEditor';
 import SecureVerificationModal from '../../../common/modals/SecureVerificationModal';
@@ -103,6 +104,30 @@ const REGION_EXAMPLE = {
   'claude-3-5-sonnet-20240620': 'europe-west1',
 };
 const ADVANCED_SETTINGS_EXPANDED_KEY = 'channel-advanced-settings-expanded';
+
+// 请求体字段透传白名单的示例值（覆盖 service_tier / safety_identifier / inference_geo / store 4 个内置默认过滤字段）
+const BODY_FIELD_PASS_THROUGH_EXAMPLES = [
+  {
+    field: 'service_tier',
+    enabled: true,
+    comment: '允许指定服务层级（OpenAI/Claude），透传可能产生额外计费',
+  },
+  {
+    field: 'safety_identifier',
+    enabled: false,
+    comment: '禁止透传安全标识符，保护用户隐私',
+  },
+  {
+    field: 'inference_geo',
+    enabled: false,
+    comment: 'Claude 数据驻留区域字段，禁止透传以满足合规',
+  },
+  {
+    field: 'store',
+    enabled: true,
+    comment: 'OpenAI 存储授权字段，默认允许透传',
+  },
+];
 
 const PARAM_OVERRIDE_LEGACY_TEMPLATE = {
   temperature: 0,
@@ -188,8 +213,6 @@ const EditChannelModal = (props) => {
     tag: '',
     multi_key_mode: 'random',
     // 渠道额外设置的默认值
-    force_format: false,
-    thinking_to_content: false,
     proxy: '',
     pass_through_body_enabled: false,
     system_prompt: '',
@@ -201,13 +224,11 @@ const EditChannelModal = (props) => {
     aws_key_type: 'ak_sk',
     // 企业账户设置
     is_enterprise_account: false,
-    // 字段透传控制默认值
-    allow_service_tier: false,
-    disable_store: false, // false = 允许透传（默认开启）
-    allow_safety_identifier: false,
-    allow_include_obfuscation: false,
-    allow_inference_geo: false,
-    allow_speed: false,
+    // 渠道级请求体/请求头透传字段规则（数组，元素 {field, enabled, comment}）
+    body_field_pass_through_rules: [],
+    header_field_pass_through_rules: [],
+    body_field_pass_through_text: '',
+    header_field_pass_through_text: '',
     claude_beta_query: false,
     // 渠道级屏蔽词过滤默认值
     sensitive_check_enabled: 'inherit', // 'inherit' 沿用全局，'true' 强制启用，'false' 强制禁用
@@ -478,8 +499,6 @@ const EditChannelModal = (props) => {
 
   // 渠道额外设置状态
   const [channelSettings, setChannelSettings] = useState({
-    force_format: false,
-    thinking_to_content: false,
     proxy: '',
     pass_through_body_enabled: false,
     system_prompt: '',
@@ -820,9 +839,6 @@ const EditChannelModal = (props) => {
       if (data.setting) {
         try {
           const parsedSettings = JSON.parse(data.setting);
-          data.force_format = parsedSettings.force_format || false;
-          data.thinking_to_content =
-            parsedSettings.thinking_to_content || false;
           data.proxy = parsedSettings.proxy || '';
           data.pass_through_body_enabled =
             parsedSettings.pass_through_body_enabled || false;
@@ -861,8 +877,6 @@ const EditChannelModal = (props) => {
                 : 'inherit';
         } catch (error) {
           console.error('解析渠道设置失败:', error);
-          data.force_format = false;
-          data.thinking_to_content = false;
           data.proxy = '';
           data.pass_through_body_enabled = false;
           data.system_prompt = '';
@@ -875,8 +889,6 @@ const EditChannelModal = (props) => {
           data.empty_response_no_billing_enabled = 'inherit';
         }
       } else {
-        data.force_format = false;
-        data.thinking_to_content = false;
         data.proxy = '';
         data.pass_through_body_enabled = false;
         data.system_prompt = '';
@@ -901,16 +913,27 @@ const EditChannelModal = (props) => {
           // 读取企业账户设置
           data.is_enterprise_account =
             parsedSettings.openrouter_enterprise === true;
-          // 读取字段透传控制设置
-          data.allow_service_tier = parsedSettings.allow_service_tier || false;
-          data.disable_store = parsedSettings.disable_store || false;
-          data.allow_safety_identifier =
-            parsedSettings.allow_safety_identifier || false;
-          data.allow_include_obfuscation =
-            parsedSettings.allow_include_obfuscation || false;
-          data.allow_inference_geo =
-            parsedSettings.allow_inference_geo || false;
-          data.allow_speed = parsedSettings.allow_speed || false;
+          // 读取请求体/请求头透传字段规则
+          data.body_field_pass_through_rules = Array.isArray(
+            parsedSettings.body_field_pass_through,
+          )
+            ? parsedSettings.body_field_pass_through
+            : [];
+          data.header_field_pass_through_rules = Array.isArray(
+            parsedSettings.header_field_pass_through,
+          )
+            ? parsedSettings.header_field_pass_through
+            : [];
+          data.body_field_pass_through_text = JSON.stringify(
+            data.body_field_pass_through_rules,
+            null,
+            2,
+          );
+          data.header_field_pass_through_text = JSON.stringify(
+            data.header_field_pass_through_rules,
+            null,
+            2,
+          );
           data.claude_beta_query = parsedSettings.claude_beta_query || false;
         } catch (error) {
           console.error('解析其他设置失败:', error);
@@ -919,12 +942,10 @@ const EditChannelModal = (props) => {
           data.vertex_key_type = 'json';
           data.aws_key_type = 'ak_sk';
           data.is_enterprise_account = false;
-          data.allow_service_tier = false;
-          data.disable_store = false;
-          data.allow_safety_identifier = false;
-          data.allow_include_obfuscation = false;
-          data.allow_inference_geo = false;
-          data.allow_speed = false;
+          data.body_field_pass_through_rules = [];
+          data.header_field_pass_through_rules = [];
+          data.body_field_pass_through_text = '[]';
+          data.header_field_pass_through_text = '[]';
           data.claude_beta_query = false;
         }
       } else {
@@ -932,12 +953,10 @@ const EditChannelModal = (props) => {
         data.vertex_key_type = 'json';
         data.aws_key_type = 'ak_sk';
         data.is_enterprise_account = false;
-        data.allow_service_tier = false;
-        data.disable_store = false;
-        data.allow_safety_identifier = false;
-        data.allow_include_obfuscation = false;
-        data.allow_inference_geo = false;
-        data.allow_speed = false;
+        data.body_field_pass_through_rules = [];
+        data.header_field_pass_through_rules = [];
+        data.body_field_pass_through_text = '[]';
+        data.header_field_pass_through_text = '[]';
         data.claude_beta_query = false;
       }
 
@@ -964,8 +983,6 @@ const EditChannelModal = (props) => {
       setBasicModels(getChannelModels(data.type));
       // 同步更新channelSettings状态显示
       setChannelSettings({
-        force_format: data.force_format,
-        thinking_to_content: data.thinking_to_content,
         proxy: data.proxy,
         pass_through_body_enabled: data.pass_through_body_enabled,
         system_prompt: data.system_prompt,
@@ -989,9 +1006,7 @@ const EditChannelModal = (props) => {
         (data.weight && data.weight !== 0) ||
         (data.proxy && data.proxy.trim()) ||
         (data.system_prompt && data.system_prompt.trim()) ||
-        data.thinking_to_content ||
         data.pass_through_body_enabled ||
-        data.force_format ||
         data.claude_beta_query ||
         data.system_prompt_override;
       if (hasAdvancedValues) {
@@ -1352,8 +1367,6 @@ const EditChannelModal = (props) => {
     formApiRef.current?.reset();
     // 重置渠道设置状态
     setChannelSettings({
-      force_format: false,
-      thinking_to_content: false,
       proxy: '',
       pass_through_body_enabled: false,
       system_prompt: '',
@@ -1728,8 +1741,6 @@ const EditChannelModal = (props) => {
         .filter(Boolean);
 
     const channelExtraSettings = {
-      force_format: localInputs.force_format || false,
-      thinking_to_content: localInputs.thinking_to_content || false,
       proxy: localInputs.proxy || '',
       pass_through_body_enabled: localInputs.pass_through_body_enabled || false,
       system_prompt: localInputs.system_prompt || '',
@@ -1794,29 +1805,37 @@ const EditChannelModal = (props) => {
       delete settings.vertex_key_type;
     }
 
-    // type === 1 (OpenAI) 或 type === 14 (Claude): 设置字段透传控制（显式保存布尔值）
-    if (localInputs.type === 1 || localInputs.type === 14) {
-      settings.allow_service_tier = localInputs.allow_service_tier === true;
-      // 仅 OpenAI 渠道需要 store / safety_identifier / include_obfuscation
-      if (localInputs.type === 1) {
-        settings.disable_store = localInputs.disable_store === true;
-        settings.allow_safety_identifier =
-          localInputs.allow_safety_identifier === true;
-        settings.allow_include_obfuscation =
-          localInputs.allow_include_obfuscation === true;
-      }
-      if (localInputs.type === 14) {
-        settings.allow_inference_geo = localInputs.allow_inference_geo === true;
-        settings.allow_speed = localInputs.allow_speed === true;
-        settings.claude_beta_query = localInputs.claude_beta_query === true;
-      }
+    // 写入请求体/请求头透传字段规则（数组 -> JSON 对象数组）
+    settings.body_field_pass_through = Array.isArray(
+      localInputs.body_field_pass_through_rules,
+    )
+      ? localInputs.body_field_pass_through_rules
+          .filter((r) => r && typeof r.field === 'string' && r.field.trim())
+          .map((r) => ({
+            field: String(r.field).trim(),
+            enabled: r.enabled === true,
+            comment: typeof r.comment === 'string' ? r.comment : '',
+          }))
+      : [];
+    settings.header_field_pass_through = Array.isArray(
+      localInputs.header_field_pass_through_rules,
+    )
+      ? localInputs.header_field_pass_through_rules
+          .filter((r) => r && typeof r.field === 'string' && r.field.trim())
+          .map((r) => ({
+            field: String(r.field).trim(),
+            enabled: r.enabled === true,
+            comment: typeof r.comment === 'string' ? r.comment : '',
+          }))
+      : [];
+
+    if (localInputs.type === 14) {
+      settings.claude_beta_query = localInputs.claude_beta_query === true;
     }
 
     localInputs.settings = JSON.stringify(settings);
 
     // 清理不需要发送到后端的字段
-    delete localInputs.force_format;
-    delete localInputs.thinking_to_content;
     delete localInputs.proxy;
     delete localInputs.pass_through_body_enabled;
     delete localInputs.system_prompt;
@@ -1832,13 +1851,10 @@ const EditChannelModal = (props) => {
     delete localInputs.vertex_key_type;
     // 顶层的 aws_key_type 不应发送给后端
     delete localInputs.aws_key_type;
-    // 清理字段透传控制的临时字段
-    delete localInputs.allow_service_tier;
-    delete localInputs.disable_store;
-    delete localInputs.allow_safety_identifier;
-    delete localInputs.allow_include_obfuscation;
-    delete localInputs.allow_inference_geo;
-    delete localInputs.allow_speed;
+    delete localInputs.body_field_pass_through_rules;
+    delete localInputs.header_field_pass_through_rules;
+    delete localInputs.body_field_pass_through_text;
+    delete localInputs.header_field_pass_through_text;
     delete localInputs.claude_beta_query;
 
     let res;
@@ -2382,28 +2398,45 @@ const EditChannelModal = (props) => {
                     </Col>
                   </Row>
 
-                  {inputs.type === 1 && (
-                    <>
-                      <div className='mt-4 mb-2 text-sm font-medium text-gray-700'>
-                        {t('字段透传控制')}
-                      </div>
-                      <Form.Switch field='allow_service_tier' label={t('允许 service_tier 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('allow_service_tier', value)} extraText={t('service_tier 字段用于指定服务层级，允许透传可能导致实际计费高于预期。默认关闭以避免额外费用')} />
-                      <Form.Switch field='disable_store' label={t('禁用 store 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('disable_store', value)} extraText={t('store 字段用于授权 OpenAI 存储请求数据以评估和优化产品。默认关闭，开启后可能导致 Codex 无法正常使用')} />
-                      <Form.Switch field='allow_safety_identifier' label={t('允许 safety_identifier 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('allow_safety_identifier', value)} extraText={t('safety_identifier 字段用于帮助 OpenAI 识别可能违反使用政策的应用程序用户。默认关闭以保护用户隐私')} />
-                      <Form.Switch field='allow_include_obfuscation' label={t('允许 stream_options.include_obfuscation 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('allow_include_obfuscation', value)} extraText={t('include_obfuscation 用于控制 Responses 流混淆字段。默认关闭以避免客户端关闭该安全保护')} />
-                    </>
-                  )}
-
-                  {inputs.type === 14 && (
-                    <>
-                      <div className='mt-4 mb-2 text-sm font-medium text-gray-700'>
-                        {t('字段透传控制')}
-                      </div>
-                      <Form.Switch field='allow_service_tier' label={t('允许 service_tier 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('allow_service_tier', value)} extraText={t('service_tier 字段用于指定服务层级，允许透传可能导致实际计费高于预期。默认关闭以避免额外费用')} />
-                      <Form.Switch field='allow_inference_geo' label={t('允许 inference_geo 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('allow_inference_geo', value)} extraText={t('inference_geo 字段用于控制 Claude 数据驻留推理区域。默认关闭以避免未经授权透传地域信息')} />
-                      <Form.Switch field='allow_speed' label={t('允许 speed 透传')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('allow_speed', value)} extraText={t('speed 字段用于控制 Claude 推理速度模式。默认关闭以避免意外切换到 fast 模式')} />
-                    </>
-                  )}
+                  <div className='mt-4 mb-2 text-sm font-medium text-gray-700'>
+                    {t('字段透传白名单')}
+                  </div>
+                  <FieldPassThroughEditor
+                    label={t('请求体字段透传')}
+                    extraText={t(
+                      '在此列出允许透传给上游的请求体字段。未列出的字段按默认隐私 / 计费策略处理。',
+                    )}
+                    placeholder={t(
+                      '示例：service_tier / safety_identifier / inference_geo / store',
+                    )}
+                    rules={inputs.body_field_pass_through_rules || []}
+                    text={inputs.body_field_pass_through_text || ''}
+                    onChangeRules={(rules) =>
+                      handleInputChange('body_field_pass_through_rules', rules)
+                    }
+                    onChangeText={(text) =>
+                      handleInputChange('body_field_pass_through_text', text)
+                    }
+                    examples={BODY_FIELD_PASS_THROUGH_EXAMPLES}
+                    t={t}
+                  />
+                  <FieldPassThroughEditor
+                    label={t('请求头透传')}
+                    extraText={t(
+                      '在此列出允许透传给上游的请求头。未列出的请求头按默认策略处理。',
+                    )}
+                    placeholder={t('示例：X-Custom-Trace-Id / Authorization')}
+                    rules={inputs.header_field_pass_through_rules || []}
+                    text={inputs.header_field_pass_through_text || ''}
+                    onChangeRules={(rules) =>
+                      handleInputChange('header_field_pass_through_rules', rules)
+                    }
+                    onChangeText={(text) =>
+                      handleInputChange('header_field_pass_through_text', text)
+                    }
+                    examples={[]}
+                    t={t}
+                  />
                 </div>
 
                 {/* Extra Settings Section */}
@@ -2416,11 +2449,6 @@ const EditChannelModal = (props) => {
                     <Form.Switch field='claude_beta_query' label={t('Claude 强制 beta=true')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('claude_beta_query', value)} extraText={t('开启后，该渠道请求 Claude 时将强制追加 ?beta=true（无需客户端手动传参）')} />
                   )}
 
-                  {inputs.type === 1 && (
-                    <Form.Switch field='force_format' label={t('强制格式化')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelSettingsChange('force_format', value)} extraText={t('强制将响应格式化为 OpenAI 标准格式（只适用于OpenAI渠道类型）')} />
-                  )}
-
-                  <Form.Switch field='thinking_to_content' label={t('思考内容转换')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelSettingsChange('thinking_to_content', value)} extraText={t('将 reasoning_content 转换为 <think> 标签拼接到内容中')} />
                   <Form.Switch field='pass_through_body_enabled' label={t('透传请求体')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelSettingsChange('pass_through_body_enabled', value)} extraText={t('启用请求体透传功能')} />
 
                   <Form.Input field='proxy' label={t('代理地址')} placeholder={t('例如: socks5://user:pass@host:port')} onChange={(value) => handleChannelSettingsChange('proxy', value)} showClear extraText={t('用于配置网络代理，支持 socks5 协议')} />

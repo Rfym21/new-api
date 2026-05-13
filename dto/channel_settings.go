@@ -3,8 +3,6 @@ package dto
 import "strings"
 
 type ChannelSettings struct {
-	ForceFormat            bool   `json:"force_format,omitempty"`
-	ThinkingToContent      bool   `json:"thinking_to_content,omitempty"`
 	Proxy                  string `json:"proxy"`
 	PassThroughBodyEnabled bool   `json:"pass_through_body_enabled,omitempty"`
 	SystemPrompt           string `json:"system_prompt,omitempty"`
@@ -115,17 +113,39 @@ const (
 )
 
 type ChannelOtherSettings struct {
-	AzureResponsesVersion                 string        `json:"azure_responses_version,omitempty"`
-	VertexKeyType                         VertexKeyType `json:"vertex_key_type,omitempty"` // "json" or "api_key"
-	OpenRouterEnterprise                  *bool         `json:"openrouter_enterprise,omitempty"`
-	ClaudeBetaQuery                       bool          `json:"claude_beta_query,omitempty"`         // Claude 渠道是否强制追加 ?beta=true
-	AllowServiceTier                      bool          `json:"allow_service_tier,omitempty"`        // 是否允许 service_tier 透传（默认过滤以避免额外计费）
-	AllowInferenceGeo                     bool          `json:"allow_inference_geo,omitempty"`       // 是否允许 inference_geo 透传（仅 Claude，默认过滤以满足数据驻留合规
-	AllowSpeed                            bool          `json:"allow_speed,omitempty"`               // 是否允许 speed 透传（仅 Claude，默认过滤以避免意外切换推理速度模式）
-	AllowSafetyIdentifier                 bool          `json:"allow_safety_identifier,omitempty"`   // 是否允许 safety_identifier 透传（默认过滤以保护用户隐私）
-	DisableStore                          bool          `json:"disable_store,omitempty"`             // 是否禁用 store 透传（默认允许透传，禁用后可能导致 Codex 无法使用）
-	AllowIncludeObfuscation               bool          `json:"allow_include_obfuscation,omitempty"` // 是否允许 stream_options.include_obfuscation 透传（默认过滤以避免关闭流混淆保护）
-	AwsKeyType                            AwsKeyType    `json:"aws_key_type,omitempty"`
+	AzureResponsesVersion string        `json:"azure_responses_version,omitempty"`
+	VertexKeyType         VertexKeyType `json:"vertex_key_type,omitempty"` // "json" or "api_key"
+	OpenRouterEnterprise  *bool         `json:"openrouter_enterprise,omitempty"`
+	ClaudeBetaQuery       bool          `json:"claude_beta_query,omitempty"` // Claude 渠道是否强制追加 ?beta=true
+	AwsKeyType            AwsKeyType    `json:"aws_key_type,omitempty"`
+
+	// BodyFieldPassThrough 渠道级请求体字段透传白名单。
+	// 若字段对应 Enabled=true，则跳过默认过滤；否则按默认策略处理。
+	// 字段名支持 a.b.c 形式表示嵌套对象路径。
+	BodyFieldPassThrough []FieldPassThroughRule `json:"body_field_pass_through,omitempty"`
+	// HeaderFieldPassThrough 渠道级请求头透传白名单。
+	HeaderFieldPassThrough []FieldPassThroughRule `json:"header_field_pass_through,omitempty"`
+}
+
+// FieldPassThroughRule 字段透传规则。
+// 用于渠道级显式声明哪些请求体/头字段允许或禁止透传给上游。
+type FieldPassThroughRule struct {
+	Field   string `json:"field"`             // 字段名（请求体支持 a.b.c 嵌套路径）
+	Enabled bool   `json:"enabled"`           // 是否允许透传
+	Comment string `json:"comment,omitempty"` // 备注，仅作 UI 展示
+}
+
+// IsBodyFieldAllowed 返回某请求体字段是否被显式允许透传；未在规则中声明返回 false。
+func (s *ChannelOtherSettings) IsBodyFieldAllowed(field string) bool {
+	if s == nil {
+		return false
+	}
+	for _, rule := range s.BodyFieldPassThrough {
+		if rule.Field == field {
+			return rule.Enabled
+		}
+	}
+	return false
 }
 
 func (s *ChannelOtherSettings) IsOpenRouterEnterprise() bool {

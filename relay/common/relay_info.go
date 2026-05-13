@@ -773,13 +773,9 @@ func FailTaskInfo(reason string) *TaskInfo {
 	}
 }
 
-// RemoveDisabledFields 从请求 JSON 数据中移除渠道设置中禁用的字段
-// service_tier: 服务层级字段，可能导致额外计费（OpenAI、Claude、Responses API 支持）
-// inference_geo: Claude 数据驻留推理区域字段（仅 Claude 支持，默认过滤）
-// speed: Claude 推理速度模式字段（仅 Claude 支持，默认过滤）
-// store: 数据存储授权字段，涉及用户隐私（仅 OpenAI、Responses API 支持，默认允许透传，禁用后可能导致 Codex 无法使用）
-// safety_identifier: 安全标识符，用于向 OpenAI 报告违规用户（仅 OpenAI 支持，涉及用户隐私）
-// stream_options.include_obfuscation: 响应流混淆控制字段（仅 OpenAI Responses API 支持）
+// RemoveDisabledFields 从请求 JSON 数据中移除渠道未声明可透传的隐私/计费/兼容相关字段。
+// 默认按内置黑名单过滤；BodyFieldPassThrough 中 Enabled=true 的字段不被移除。
+// 字段名支持 a.b.c 形式表达嵌套对象路径（如 "stream_options.include_obfuscation"）。
 func RemoveDisabledFields(jsonData []byte, channelOtherSettings dto.ChannelOtherSettings, channelPassThroughEnabled bool) ([]byte, error) {
 	if model_setting.GetGlobalSettings().PassThroughRequestEnabled || channelPassThroughEnabled {
 		return jsonData, nil
@@ -791,55 +787,20 @@ func RemoveDisabledFields(jsonData []byte, channelOtherSettings dto.ChannelOther
 		return jsonData, nil
 	}
 
-	// 默认移除 service_tier，除非明确允许（避免额外计费风险）
-	if !channelOtherSettings.AllowServiceTier {
-		if _, exists := data["service_tier"]; exists {
-			delete(data, "service_tier")
-		}
+	// 默认过滤的请求体字段（隐私 / 额外计费 / 流混淆 / 兼容性风险）
+	defaultStripFields := []string{
+		"service_tier",                       // 服务层级，可能额外计费
+		"inference_geo",                      // 数据驻留区域
+		"speed",                              // 推理速度模式
+		"safety_identifier",                  // 用户隐私标识
+		"stream_options.include_obfuscation", // 关闭流混淆保护
 	}
 
-	// 默认移除 inference_geo，除非明确允许（避免在未授权情况下透传数据驻留区域）
-	if !channelOtherSettings.AllowInferenceGeo {
-		if _, exists := data["inference_geo"]; exists {
-			delete(data, "inference_geo")
+	for _, field := range defaultStripFields {
+		if channelOtherSettings.IsBodyFieldAllowed(field) {
+			continue
 		}
-	}
-
-	// 默认移除 speed，除非明确允许（避免意外切换 Claude 推理速度模式）
-	if !channelOtherSettings.AllowSpeed {
-		if _, exists := data["speed"]; exists {
-			delete(data, "speed")
-		}
-	}
-
-	// 默认允许 store 透传，除非明确禁用（禁用可能影响 Codex 使用）
-	if channelOtherSettings.DisableStore {
-		if _, exists := data["store"]; exists {
-			delete(data, "store")
-		}
-	}
-
-	// 默认移除 safety_identifier，除非明确允许（保护用户隐私，避免向 OpenAI 报告用户信息）
-	if !channelOtherSettings.AllowSafetyIdentifier {
-		if _, exists := data["safety_identifier"]; exists {
-			delete(data, "safety_identifier")
-		}
-	}
-
-	// 默认移除 stream_options.include_obfuscation，除非明确允许（避免关闭响应流混淆保护）
-	if !channelOtherSettings.AllowIncludeObfuscation {
-		if streamOptionsAny, exists := data["stream_options"]; exists {
-			if streamOptions, ok := streamOptionsAny.(map[string]interface{}); ok {
-				if _, includeExists := streamOptions["include_obfuscation"]; includeExists {
-					delete(streamOptions, "include_obfuscation")
-				}
-				if len(streamOptions) == 0 {
-					delete(data, "stream_options")
-				} else {
-					data["stream_options"] = streamOptions
-				}
-			}
-		}
+		removeJSONPath(data, field)
 	}
 
 	jsonDataAfter, err := common.Marshal(data)
@@ -848,6 +809,59 @@ func RemoveDisabledFields(jsonData []byte, channelOtherSettings dto.ChannelOther
 		return jsonData, nil
 	}
 	return jsonDataAfter, nil
+}
+
+// removeJSONPath 按 a.b.c 路径删除嵌套对象中的字段；若中途路径不是 object 则放弃。
+// 删除后若上层 object 变为空，会一并删除以避免留下孤立空字段。
+func removeJSONPath(data map[string]interface{}, path string) {
+	if data == nil || path == "" {
+		return
+	}
+	parts := splitJSONPath(path)
+	removeJSONPathRecursive(data, parts)
+}
+
+func splitJSONPath(path string) []string {
+	parts := make([]string, 0, 4)
+	start := 0
+	for i := 0; i < len(path); i++ {
+		if path[i] == '.' {
+			if i > start {
+				parts = append(parts, path[start:i])
+			}
+			start = i + 1
+		}
+	}
+	if start < len(path) {
+		parts = append(parts, path[start:])
+	}
+	return parts
+}
+
+func removeJSONPathRecursive(node map[string]interface{}, parts []string) bool {
+	if len(parts) == 0 {
+		return false
+	}
+	if len(parts) == 1 {
+		if _, ok := node[parts[0]]; ok {
+			delete(node, parts[0])
+			return true
+		}
+		return false
+	}
+	child, ok := node[parts[0]]
+	if !ok {
+		return false
+	}
+	childMap, ok := child.(map[string]interface{})
+	if !ok {
+		return false
+	}
+	removed := removeJSONPathRecursive(childMap, parts[1:])
+	if removed && len(childMap) == 0 {
+		delete(node, parts[0])
+	}
+	return removed
 }
 
 // RemoveGeminiDisabledFields removes disabled fields from Gemini request JSON data
