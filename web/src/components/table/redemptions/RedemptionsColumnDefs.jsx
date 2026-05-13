@@ -132,10 +132,14 @@ export const getRedemptionsColumns = ({
       },
     },
     {
-      title: t('兑换人ID'),
+      title: t('兑换人'),
       dataIndex: 'used_user_id',
-      render: (text) => {
-        return <div>{text === 0 ? t('无') : text}</div>;
+      render: (text, record) => {
+        if (!text) {
+          return <div>{t('无')}</div>;
+        }
+        const name = record?.used_username;
+        return <div>{name ? name : `#${text}`}</div>;
       },
     },
     {

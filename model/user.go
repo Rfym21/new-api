@@ -592,6 +592,88 @@ func (user *User) HardDelete() error {
 	return err
 }
 
+// PurgeSoftDeletedUsers 物理删除所有已软删除（已注销）的用户。
+// 仅清理 deleted_at 不为空的行，返回受影响的行数。
+// root 用户在创建时已限制不可注销，无需特殊白名单。
+func PurgeSoftDeletedUsers() (int64, error) {
+	res := DB.Unscoped().Where("deleted_at IS NOT NULL").Delete(&User{})
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return res.RowsAffected, nil
+}
+
+// BatchUserActionFilter 描述按额度区间筛选用户的过滤条件。
+// 各字段为零或负数时视为"不限制该项"。
+type BatchUserActionFilter struct {
+	UsedQuotaMin      int
+	UsedQuotaMax      int
+	RemainingQuotaMin int
+	RemainingQuotaMax int
+	TotalQuotaMin     int
+	TotalQuotaMax     int
+	HasUsedMin        bool
+	HasUsedMax        bool
+	HasRemainingMin   bool
+	HasRemainingMax   bool
+	HasTotalMin       bool
+	HasTotalMax       bool
+}
+
+// previewBatchUserActionQuery 构造按额度筛选的查询，并排除 root / 管理员。
+// total = quota + used_quota（系统中"总额度"语义即历史累计，与日志统计一致）。
+func previewBatchUserActionQuery(filter BatchUserActionFilter) *gorm.DB {
+	query := DB.Model(&User{}).Where("role < ?", common.RoleAdminUser)
+	if filter.HasUsedMin {
+		query = query.Where("used_quota >= ?", filter.UsedQuotaMin)
+	}
+	if filter.HasUsedMax {
+		query = query.Where("used_quota <= ?", filter.UsedQuotaMax)
+	}
+	if filter.HasRemainingMin {
+		query = query.Where("quota >= ?", filter.RemainingQuotaMin)
+	}
+	if filter.HasRemainingMax {
+		query = query.Where("quota <= ?", filter.RemainingQuotaMax)
+	}
+	if filter.HasTotalMin {
+		query = query.Where("quota + used_quota >= ?", filter.TotalQuotaMin)
+	}
+	if filter.HasTotalMax {
+		query = query.Where("quota + used_quota <= ?", filter.TotalQuotaMax)
+	}
+	return query
+}
+
+// CountUsersByQuotaFilter 计算符合筛选条件的用户数量（用于预览）。
+func CountUsersByQuotaFilter(filter BatchUserActionFilter) (int64, error) {
+	var count int64
+	if err := previewBatchUserActionQuery(filter).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// BatchDisableUsersByQuotaFilter 批量禁用符合筛选条件的用户，返回受影响的行数。
+func BatchDisableUsersByQuotaFilter(filter BatchUserActionFilter) (int64, error) {
+	res := previewBatchUserActionQuery(filter).
+		Where("status = ?", common.UserStatusEnabled).
+		Update("status", common.UserStatusDisabled)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return res.RowsAffected, nil
+}
+
+// BatchSoftDeleteUsersByQuotaFilter 批量软注销符合筛选条件的用户，返回受影响的行数。
+func BatchSoftDeleteUsersByQuotaFilter(filter BatchUserActionFilter) (int64, error) {
+	res := previewBatchUserActionQuery(filter).Delete(&User{})
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return res.RowsAffected, nil
+}
+
 // ValidateAndFill check password & user status
 func (user *User) ValidateAndFill() (err error) {
 	// When querying with struct, GORM will only query with non-zero fields,

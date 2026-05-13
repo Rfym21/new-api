@@ -22,6 +22,7 @@ type Redemption struct {
 	RedeemedTime int64          `json:"redeemed_time" gorm:"bigint"`
 	Count        int            `json:"count" gorm:"-:all"` // only for api request
 	UsedUserId   int            `json:"used_user_id"`
+	UsedUsername string         `json:"used_username" gorm:"-:all"` // 兑换人用户名（运行时填充）
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	ExpiredTime  int64          `json:"expired_time" gorm:"bigint"` // 过期时间，0 表示不过期
 }
@@ -57,6 +58,7 @@ func GetAllRedemptions(startIdx int, num int) (redemptions []*Redemption, total 
 		return nil, 0, err
 	}
 
+	fillRedemptionUsedUsernames(redemptions)
 	return redemptions, total, nil
 }
 
@@ -99,7 +101,49 @@ func SearchRedemptions(keyword string, startIdx int, num int) (redemptions []*Re
 		return nil, 0, err
 	}
 
+	fillRedemptionUsedUsernames(redemptions)
 	return redemptions, total, nil
+}
+
+// fillRedemptionUsedUsernames 批量填充每个兑换码的兑换人用户名，避免 N+1。
+// 仅查询 used_user_id 非 0 的兑换记录，并保留旧版数据中已删除用户的兼容显示。
+func fillRedemptionUsedUsernames(redemptions []*Redemption) {
+	if len(redemptions) == 0 {
+		return
+	}
+	idSet := make(map[int]struct{}, len(redemptions))
+	for _, r := range redemptions {
+		if r != nil && r.UsedUserId > 0 {
+			idSet[r.UsedUserId] = struct{}{}
+		}
+	}
+	if len(idSet) == 0 {
+		return
+	}
+	ids := make([]int, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
+	}
+	type idName struct {
+		Id       int
+		Username string
+	}
+	var rows []idName
+	if err := DB.Unscoped().Table("users").Select("id, username").Where("id IN ?", ids).Scan(&rows).Error; err != nil {
+		return
+	}
+	nameMap := make(map[int]string, len(rows))
+	for _, row := range rows {
+		nameMap[row.Id] = row.Username
+	}
+	for _, r := range redemptions {
+		if r == nil {
+			continue
+		}
+		if name, ok := nameMap[r.UsedUserId]; ok {
+			r.UsedUsername = name
+		}
+	}
 }
 
 func GetRedemptionById(id int) (*Redemption, error) {

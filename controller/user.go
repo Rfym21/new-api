@@ -780,6 +780,103 @@ func DeleteUser(c *gin.Context) {
 	}
 }
 
+// PurgeDeletedUsers 物理清理所有软删除（已注销）的用户。
+func PurgeDeletedUsers(c *gin.Context) {
+	count, err := model.PurgeSoftDeletedUsers()
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccess(c, gin.H{"deleted": count})
+}
+
+// BatchUserActionRequest 批量按额度筛选的请求体。
+// 字段为指针：nil = 不约束，0 = 等于 0。
+// action 必须是 disable / cancel 之一。
+type BatchUserActionRequest struct {
+	Action            string `json:"action"`
+	UsedQuotaMin      *int   `json:"used_quota_min,omitempty"`
+	UsedQuotaMax      *int   `json:"used_quota_max,omitempty"`
+	RemainingQuotaMin *int   `json:"remaining_quota_min,omitempty"`
+	RemainingQuotaMax *int   `json:"remaining_quota_max,omitempty"`
+	TotalQuotaMin     *int   `json:"total_quota_min,omitempty"`
+	TotalQuotaMax     *int   `json:"total_quota_max,omitempty"`
+	DryRun            bool   `json:"dry_run,omitempty"`
+}
+
+func (req BatchUserActionRequest) toFilter() model.BatchUserActionFilter {
+	f := model.BatchUserActionFilter{}
+	if req.UsedQuotaMin != nil {
+		f.UsedQuotaMin = *req.UsedQuotaMin
+		f.HasUsedMin = true
+	}
+	if req.UsedQuotaMax != nil {
+		f.UsedQuotaMax = *req.UsedQuotaMax
+		f.HasUsedMax = true
+	}
+	if req.RemainingQuotaMin != nil {
+		f.RemainingQuotaMin = *req.RemainingQuotaMin
+		f.HasRemainingMin = true
+	}
+	if req.RemainingQuotaMax != nil {
+		f.RemainingQuotaMax = *req.RemainingQuotaMax
+		f.HasRemainingMax = true
+	}
+	if req.TotalQuotaMin != nil {
+		f.TotalQuotaMin = *req.TotalQuotaMin
+		f.HasTotalMin = true
+	}
+	if req.TotalQuotaMax != nil {
+		f.TotalQuotaMax = *req.TotalQuotaMax
+		f.HasTotalMax = true
+	}
+	return f
+}
+
+// BatchUserActionByQuota 按已用/剩余/总额度区间，批量禁用或注销用户。
+// dry_run = true 时仅返回匹配数量。
+func BatchUserActionByQuota(c *gin.Context) {
+	var req BatchUserActionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ApiErrorMsg(c, "参数错误")
+		return
+	}
+	if !req.DryRun && req.Action != "disable" && req.Action != "cancel" {
+		common.ApiErrorMsg(c, "action 必须为 disable 或 cancel")
+		return
+	}
+	filter := req.toFilter()
+	if !filter.HasUsedMin && !filter.HasUsedMax &&
+		!filter.HasRemainingMin && !filter.HasRemainingMax &&
+		!filter.HasTotalMin && !filter.HasTotalMax {
+		common.ApiErrorMsg(c, "至少需要指定一个筛选条件")
+		return
+	}
+
+	matched, err := model.CountUsersByQuotaFilter(filter)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	if req.DryRun {
+		common.ApiSuccess(c, gin.H{"matched": matched})
+		return
+	}
+
+	var affected int64
+	switch req.Action {
+	case "disable":
+		affected, err = model.BatchDisableUsersByQuotaFilter(filter)
+	case "cancel":
+		affected, err = model.BatchSoftDeleteUsersByQuotaFilter(filter)
+	}
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccess(c, gin.H{"matched": matched, "affected": affected})
+}
+
 func DeleteSelf(c *gin.Context) {
 	id := c.GetInt("id")
 	user, _ := model.GetUserById(id, false)
