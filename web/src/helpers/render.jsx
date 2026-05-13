@@ -103,7 +103,6 @@ import {
   SiSlack,
   SiTelegram,
   SiTwitch,
-  SiWechat,
   SiX,
 } from 'react-icons/si';
 
@@ -534,7 +533,6 @@ const oauthProviderIconMap = {
   twitter: SiX,
   slack: SiSlack,
   telegram: SiTelegram,
-  wechat: SiWechat,
   keycloak: SiKeycloak,
   nextcloud: SiNextcloud,
   authentik: SiAuthentik,

@@ -40,7 +40,7 @@ import {
   IconDelete,
   IconGithubLogo,
 } from '@douyinfe/semi-icons';
-import { SiDiscord, SiTelegram, SiWechat, SiLinux } from 'react-icons/si';
+import { SiDiscord, SiTelegram, SiLinux } from 'react-icons/si';
 
 const { Text } = Typography;
 
@@ -89,7 +89,6 @@ const UserBindingManagementModal = ({
           github_id: userData.github_id || '',
           discord_id: userData.discord_id || '',
           oidc_id: userData.oidc_id || '',
-          wechat_id: userData.wechat_id || '',
           telegram_id: userData.telegram_id || '',
           linux_do_id: userData.linux_do_id || '',
         });
@@ -240,16 +239,6 @@ const UserBindingManagementModal = ({
           size='default'
           className='text-slate-600 dark:text-slate-300'
         />
-      ),
-    },
-    {
-      key: 'wechat',
-      field: 'wechat_id',
-      name: t('微信'),
-      enabled: Boolean(statusInfo.wechat_login),
-      value: getBuiltInBindingValue('wechat_id'),
-      icon: (
-        <SiWechat size={20} className='text-slate-600 dark:text-slate-300' />
       ),
     },
     {
