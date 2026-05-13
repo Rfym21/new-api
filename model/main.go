@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -256,6 +257,10 @@ func migrateDB() error {
 	}
 	// Drop legacy users.wechat_id column left over from removed WeChat login
 	if err := dropLegacyUserWechatIDColumn(); err != nil {
+		return err
+	}
+	// Physically delete channels whose type is not in the supported whitelist
+	if err := cleanupNonWhitelistChannels(); err != nil {
 		return err
 	}
 
@@ -581,6 +586,36 @@ func dropLegacyUserWechatIDColumn() error {
 		return fmt.Errorf("failed to drop legacy users.%s column: %w", columnName, err)
 	}
 	common.SysLog("Dropped legacy users.wechat_id column")
+	return nil
+}
+
+// cleanupNonWhitelistChannels 物理删除 channels 表中类型不在白名单内的存量行。
+// 渠道收敛后系统仅支持 OpenAI/Azure/Anthropic/Gemini/AWS/VertexAI 6 种渠道，
+// 残留行无法编辑/调用，本函数在启动迁移阶段执行一次性物理删除。
+// 用 options 表中的迁移标记保证幂等。
+func cleanupNonWhitelistChannels() error {
+	const migrationKey = "migration_channel_whitelist_done"
+	if !DB.Migrator().HasTable(&Channel{}) || !DB.Migrator().HasTable(&Option{}) {
+		return nil
+	}
+
+	var marker Option
+	if err := DB.Where("`key` = ?", migrationKey).First(&marker).Error; err == nil {
+		return nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to query channel whitelist migration marker: %w", err)
+	}
+
+	whitelist := []int{1, 3, 14, 24, 33, 41}
+	res := DB.Where("type NOT IN ?", whitelist).Delete(&Channel{})
+	if res.Error != nil {
+		return fmt.Errorf("failed to cleanup non-whitelist channels: %w", res.Error)
+	}
+	common.SysLog(fmt.Sprintf("Channel whitelist cleanup deleted %d row(s)", res.RowsAffected))
+
+	if err := DB.Create(&Option{Key: migrationKey, Value: "1"}).Error; err != nil {
+		return fmt.Errorf("failed to record channel whitelist migration marker: %w", err)
+	}
 	return nil
 }
 
