@@ -254,6 +254,10 @@ func migrateDB() error {
 	if err := migrateTokenModelLimitsToText(); err != nil {
 		return err
 	}
+	// Drop legacy users.wechat_id column left over from removed WeChat login
+	if err := dropLegacyUserWechatIDColumn(); err != nil {
+		return err
+	}
 
 	err := DB.AutoMigrate(
 		&Channel{},
@@ -564,6 +568,24 @@ func migrateSubscriptionPlanPriceAmount() {
 			common.SysLog(fmt.Sprintf("Successfully migrated %s.%s to decimal(10,6)", tableName, columnName))
 		}
 	}
+}
+
+// dropLegacyUserWechatIDColumn 物理删除 users.wechat_id 列。
+// WeChat 登录已在历史提交中移除，但 GORM AutoMigrate 不会 drop 列，
+// 因此存量部署仍残留该字段。本函数在启动迁移阶段执行幂等清理。
+func dropLegacyUserWechatIDColumn() error {
+	const columnName = "wechat_id"
+	if !DB.Migrator().HasTable(&User{}) {
+		return nil
+	}
+	if !DB.Migrator().HasColumn(&User{}, columnName) {
+		return nil
+	}
+	if err := DB.Migrator().DropColumn(&User{}, columnName); err != nil {
+		return fmt.Errorf("failed to drop legacy users.%s column: %w", columnName, err)
+	}
+	common.SysLog("Dropped legacy users.wechat_id column")
+	return nil
 }
 
 func closeDB(db *gorm.DB) error {
