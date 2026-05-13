@@ -10,7 +10,6 @@ import (
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/logger"
-	"github.com/QuantumNous/new-api/relay/channel/openrouter"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/QuantumNous/new-api/relay/helper"
 	"github.com/QuantumNous/new-api/service"
@@ -202,21 +201,6 @@ func OpenaiHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Respo
 	}
 	if common.DebugEnabled {
 		println("upstream response body:", string(responseBody))
-	}
-	// Unmarshal to simpleResponse
-	if info.ChannelType == constant.ChannelTypeOpenRouter && info.ChannelOtherSettings.IsOpenRouterEnterprise() {
-		// 尝试解析为 openrouter enterprise
-		var enterpriseResponse openrouter.OpenRouterEnterpriseResponse
-		err = common.Unmarshal(responseBody, &enterpriseResponse)
-		if err != nil {
-			return nil, types.NewOpenAIError(err, types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
-		}
-		if enterpriseResponse.Success {
-			responseBody = enterpriseResponse.Data
-		} else {
-			logger.LogError(c, fmt.Sprintf("openrouter enterprise response success=false, data: %s", enterpriseResponse.Data))
-			return nil, types.NewOpenAIError(fmt.Errorf("openrouter response success=false"), types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
-		}
 	}
 
 	err = common.Unmarshal(responseBody, &simpleResponse)

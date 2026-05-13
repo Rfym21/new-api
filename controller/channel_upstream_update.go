@@ -15,7 +15,6 @@ import (
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/relay/channel/gemini"
-	"github.com/QuantumNous/new-api/relay/channel/ollama"
 	"github.com/QuantumNous/new-api/service"
 
 	"github.com/gin-gonic/gin"
@@ -263,17 +262,6 @@ func fetchChannelUpstreamModelIDs(channel *model.Channel) ([]string, error) {
 	baseURL := constant.ChannelBaseURLs[channel.Type]
 	if channel.GetBaseURL() != "" {
 		baseURL = channel.GetBaseURL()
-	}
-
-	if channel.Type == constant.ChannelTypeOllama {
-		key := strings.TrimSpace(strings.Split(channel.Key, "\n")[0])
-		models, err := ollama.FetchOllamaModels(baseURL, key)
-		if err != nil {
-			return nil, err
-		}
-		return normalizeModelNames(lo.Map(models, func(item ollama.OllamaModel, _ int) string {
-			return item.Name
-		})), nil
 	}
 
 	if channel.Type == constant.ChannelTypeGemini {

@@ -8,11 +8,15 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/dto"
-	"github.com/QuantumNous/new-api/relay/channel/openrouter"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/QuantumNous/new-api/relay/reasonmap"
 	"github.com/samber/lo"
 )
+
+type openAIReasoning struct {
+	Enabled   bool `json:"enabled"`
+	MaxTokens int  `json:"max_tokens,omitempty"`
+}
 
 func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.RelayInfo) (*dto.GeneralOpenAIRequest, error) {
 	openAIRequest := dto.GeneralOpenAIRequest{
@@ -40,14 +44,14 @@ func ClaudeToOpenAIRequest(claudeRequest dto.ClaudeRequest, info *relaycommon.Re
 			openAIRequest.Verbosity = effortBytes
 		}
 		if claudeRequest.Thinking != nil {
-			var reasoning openrouter.RequestReasoning
+			var reasoning openAIReasoning
 			if claudeRequest.Thinking.Type == "enabled" {
-				reasoning = openrouter.RequestReasoning{
+				reasoning = openAIReasoning{
 					Enabled:   true,
 					MaxTokens: claudeRequest.Thinking.GetBudgetTokens(),
 				}
 			} else if claudeRequest.Thinking.Type == "adaptive" {
-				reasoning = openrouter.RequestReasoning{
+				reasoning = openAIReasoning{
 					Enabled: true,
 				}
 			}
