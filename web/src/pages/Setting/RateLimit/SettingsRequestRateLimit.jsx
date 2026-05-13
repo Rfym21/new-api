@@ -180,8 +180,8 @@ export default function RequestRateLimit(props) {
             </Row>
             <Row>
               <Col xs={24}>
-                <Tabs type=”line” defaultActiveKey=”visual”>
-                  <Tabs.TabPane tab={t('可视化编辑')} itemKey=”visual”>
+                <Tabs type="line" defaultActiveKey="visual">
+                  <Tabs.TabPane tab={t('可视化编辑')} itemKey="visual">
                     <GroupRateLimitEditor
                       value={inputs.ModelRequestRateLimitGroup}
                       onChange={(value) => {
@@ -189,7 +189,7 @@ export default function RequestRateLimit(props) {
                       }}
                     />
                   </Tabs.TabPane>
-                  <Tabs.TabPane tab={t('JSON 编辑')} itemKey=”json”>
+                  <Tabs.TabPane tab={t('JSON 编辑')} itemKey="json">
                     <Form.TextArea
                       label={t('分组速率限制')}
                       placeholder={t(
