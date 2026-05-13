@@ -24,8 +24,8 @@ import {
   Button,
   Input,
   Switch,
-  Empty,
   Space,
+  TextArea,
 } from '@douyinfe/semi-ui';
 import { IconDelete, IconPlus } from '@douyinfe/semi-icons';
 
@@ -133,26 +133,23 @@ const FieldPassThroughEditor = ({
         <TabPane tab={t('可视化编辑')} itemKey='visual'>
           <div className='flex flex-col gap-2'>
             {(rules || []).length === 0 ? (
-              <Empty
-                title={t('暂无规则')}
-                description={t('点击下方"新增字段"添加')}
-                style={{ padding: 12 }}
-              >
-                {examples && examples.length > 0 ? (
-                  <Space>
-                    <Button size='small' onClick={addRule} icon={<IconPlus />}>
-                      {t('新增字段')}
-                    </Button>
-                    <Button size='small' type='tertiary' onClick={fillExamples}>
-                      {t('填充示例')}
-                    </Button>
-                  </Space>
-                ) : (
+              <div className='py-6 text-center text-xs text-gray-400'>
+                <div className='mb-2'>{t('暂无规则，点击下方"新增字段"添加')}</div>
+                <Space>
                   <Button size='small' onClick={addRule} icon={<IconPlus />}>
                     {t('新增字段')}
                   </Button>
-                )}
-              </Empty>
+                  {examples && examples.length > 0 ? (
+                    <Button
+                      size='small'
+                      type='tertiary'
+                      onClick={fillExamples}
+                    >
+                      {t('填充示例')}
+                    </Button>
+                  ) : null}
+                </Space>
+              </div>
             ) : (
               <>
                 <div className='hidden md:grid grid-cols-12 gap-2 text-xs text-gray-500 px-1'>
@@ -227,7 +224,7 @@ const FieldPassThroughEditor = ({
           </div>
         </TabPane>
         <TabPane tab={t('JSON 编辑')} itemKey='json'>
-          <Input.TextArea
+          <TextArea
             value={text}
             autosize={{ minRows: 6, maxRows: 16 }}
             placeholder='[{"field":"service_tier","enabled":true,"comment":"备注"}]'
