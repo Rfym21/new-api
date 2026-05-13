@@ -16,6 +16,7 @@ import (
 	"github.com/QuantumNous/new-api/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 )
 
 type OpenAIModel struct {
@@ -220,6 +221,65 @@ func FetchUpstreamModels(c *gin.Context) {
 		"message": "",
 		"data":    ids,
 	})
+}
+
+// fetchChannelUpstreamModelIDs 拉取指定渠道的上游模型 ID 列表，
+// 仅支持白名单内 6 种渠道：Gemini 走 SDK，其它走标准 OpenAI /v1/models。
+func fetchChannelUpstreamModelIDs(channel *model.Channel) ([]string, error) {
+	baseURL := constant.ChannelBaseURLs[channel.Type]
+	if channel.GetBaseURL() != "" {
+		baseURL = channel.GetBaseURL()
+	}
+
+	if channel.Type == constant.ChannelTypeGemini {
+		key, _, apiErr := channel.GetNextEnabledKey()
+		if apiErr != nil {
+			return nil, fmt.Errorf("获取渠道密钥失败: %w", apiErr)
+		}
+		key = strings.TrimSpace(key)
+		models, err := gemini.FetchGeminiModels(baseURL, key, channel.GetSetting().Proxy)
+		if err != nil {
+			return nil, err
+		}
+		return normalizeModelNames(models), nil
+	}
+
+	url := fmt.Sprintf("%s/v1/models", baseURL)
+
+	key, _, apiErr := channel.GetNextEnabledKey()
+	if apiErr != nil {
+		return nil, fmt.Errorf("获取渠道密钥失败: %w", apiErr)
+	}
+	key = strings.TrimSpace(key)
+
+	headers, err := buildFetchModelsHeaders(channel, key)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := GetResponseBody(http.MethodGet, url, channel, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	var result OpenAIModelsResponse
+	if err := common.Unmarshal(body, &result); err != nil {
+		return nil, err
+	}
+
+	ids := lo.Map(result.Data, func(item OpenAIModel, _ int) string {
+		return item.ID
+	})
+
+	return normalizeModelNames(ids), nil
+}
+
+// normalizeModelNames 去重并裁剪空白模型名。
+func normalizeModelNames(models []string) []string {
+	return lo.Uniq(lo.FilterMap(models, func(m string, _ int) (string, bool) {
+		trimmed := strings.TrimSpace(m)
+		return trimmed, trimmed != ""
+	}))
 }
 
 func FixChannelsAbilities(c *gin.Context) {

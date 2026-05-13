@@ -61,8 +61,6 @@ const ChannelsTable = (channelsData) => {
     // Multi-key management
     setShowMultiKeyManageModal,
     setCurrentMultiKeyChannel,
-    openUpstreamUpdateModal,
-    detectChannelUpstreamUpdates,
   } = channelsData;
 
   // Get all columns
@@ -88,8 +86,6 @@ const ChannelsTable = (channelsData) => {
       checkOllamaVersion,
       setShowMultiKeyManageModal,
       setCurrentMultiKeyChannel,
-      openUpstreamUpdateModal,
-      detectChannelUpstreamUpdates,
     });
   }, [
     t,
@@ -112,8 +108,6 @@ const ChannelsTable = (channelsData) => {
     checkOllamaVersion,
     setShowMultiKeyManageModal,
     setCurrentMultiKeyChannel,
-    openUpstreamUpdateModal,
-    detectChannelUpstreamUpdates,
   ]);
 
   // Filter columns based on visibility settings
