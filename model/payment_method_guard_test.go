@@ -9,6 +9,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func truncateTables(t *testing.T) {
+	t.Helper()
+	t.Cleanup(func() {
+		DB.Exec("DELETE FROM users")
+		DB.Exec("DELETE FROM tokens")
+		DB.Exec("DELETE FROM logs")
+		DB.Exec("DELETE FROM channels")
+		DB.Exec("DELETE FROM top_ups")
+		DB.Exec("DELETE FROM subscription_orders")
+		DB.Exec("DELETE FROM subscription_plans")
+		DB.Exec("DELETE FROM user_subscriptions")
+	})
+}
+
 func insertUserForPaymentGuardTest(t *testing.T, id int, quota int) {
 	t.Helper()
 	user := &User{
