@@ -801,6 +801,15 @@ func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 	if claudeResponse.Delta != nil && claudeResponse.Delta.StopReason != nil {
 		maybeMarkClaudeRefusal(c, *claudeResponse.Delta.StopReason)
 	}
+	forceCache := info != nil && info.ChannelOtherSettings.ForceCacheEnabled
+	if forceCache {
+		if claudeResponse.Message != nil && claudeResponse.Message.Usage != nil {
+			ApplyForceCacheUsageZeroing(claudeResponse.Message.Usage)
+		}
+		if claudeResponse.Usage != nil {
+			ApplyForceCacheUsageZeroing(claudeResponse.Usage)
+		}
+	}
 	if info.RelayFormat == types.RelayFormatClaude {
 		FormatClaudeResponseInfo(&claudeResponse, nil, claudeInfo)
 
@@ -815,6 +824,9 @@ func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 			if !shouldSkipClaudeMessageDeltaUsagePatch(info) {
 				data = patchClaudeMessageDeltaUsageData(data, buildMessageDeltaPatchUsage(&claudeResponse, claudeInfo))
 			}
+		}
+		if forceCache {
+			data = RewriteClaudeStreamUsageString(data)
 		}
 		helper.ClaudeChunkData(c, claudeResponse, data)
 	} else if info.RelayFormat == types.RelayFormatOpenAI {
@@ -906,6 +918,10 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 	if claudeInfo.Usage == nil {
 		claudeInfo.Usage = &dto.Usage{}
 	}
+	forceCache := info != nil && info.ChannelOtherSettings.ForceCacheEnabled
+	if forceCache && claudeResponse.Usage != nil {
+		ApplyForceCacheUsageZeroing(claudeResponse.Usage)
+	}
 	if claudeResponse.Usage != nil {
 		claudeInfo.Usage.PromptTokens = claudeResponse.Usage.InputTokens
 		claudeInfo.Usage.CompletionTokens = claudeResponse.Usage.OutputTokens
@@ -927,6 +943,9 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 		}
 	case types.RelayFormatClaude:
 		responseData = data
+		if forceCache {
+			responseData = RewriteClaudeResponseUsageBytes(responseData)
+		}
 	}
 
 	if claudeResponse.Usage != nil && claudeResponse.Usage.ServerToolUse != nil && claudeResponse.Usage.ServerToolUse.WebSearchRequests > 0 {

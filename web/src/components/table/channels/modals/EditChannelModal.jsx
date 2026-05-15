@@ -230,6 +230,7 @@ const EditChannelModal = (props) => {
     body_field_pass_through_text: '',
     header_field_pass_through_text: '',
     claude_beta_query: false,
+    force_cache_enabled: false,
     // 渠道级屏蔽词过滤默认值
     sensitive_check_enabled: 'inherit', // 'inherit' 沿用全局，'true' 强制启用，'false' 强制禁用
     sensitive_mode: 'inherit', // 'inherit' 沿用全局词表，'modify' 在全局基础上修改，'override' 覆盖全局词表
@@ -935,6 +936,7 @@ const EditChannelModal = (props) => {
             2,
           );
           data.claude_beta_query = parsedSettings.claude_beta_query || false;
+          data.force_cache_enabled = parsedSettings.force_cache_enabled || false;
         } catch (error) {
           console.error('解析其他设置失败:', error);
           data.azure_responses_version = '';
@@ -947,6 +949,7 @@ const EditChannelModal = (props) => {
           data.body_field_pass_through_text = '[]';
           data.header_field_pass_through_text = '[]';
           data.claude_beta_query = false;
+          data.force_cache_enabled = false;
         }
       } else {
         // 兼容历史数据：老渠道没有 settings 时，默认按 json 展示
@@ -958,6 +961,7 @@ const EditChannelModal = (props) => {
         data.body_field_pass_through_text = '[]';
         data.header_field_pass_through_text = '[]';
         data.claude_beta_query = false;
+        data.force_cache_enabled = false;
       }
 
       if (
@@ -1008,6 +1012,7 @@ const EditChannelModal = (props) => {
         (data.system_prompt && data.system_prompt.trim()) ||
         data.pass_through_body_enabled ||
         data.claude_beta_query ||
+        data.force_cache_enabled ||
         data.system_prompt_override;
       if (hasAdvancedValues) {
         setAdvancedSettingsOpen(true);
@@ -1831,6 +1836,7 @@ const EditChannelModal = (props) => {
 
     if (localInputs.type === 14) {
       settings.claude_beta_query = localInputs.claude_beta_query === true;
+      settings.force_cache_enabled = localInputs.force_cache_enabled === true;
     }
 
     localInputs.settings = JSON.stringify(settings);
@@ -1856,6 +1862,7 @@ const EditChannelModal = (props) => {
     delete localInputs.body_field_pass_through_text;
     delete localInputs.header_field_pass_through_text;
     delete localInputs.claude_beta_query;
+    delete localInputs.force_cache_enabled;
 
     let res;
     localInputs.auto_ban = localInputs.auto_ban ? 1 : 0;
@@ -2447,6 +2454,10 @@ const EditChannelModal = (props) => {
 
                   {inputs.type === 14 && (
                     <Form.Switch field='claude_beta_query' label={t('Claude 强制 beta=true')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('claude_beta_query', value)} extraText={t('开启后，该渠道请求 Claude 时将强制追加 ?beta=true（无需客户端手动传参）')} />
+                  )}
+
+                  {inputs.type === 14 && (
+                    <Form.Switch field='force_cache_enabled' label={t('Claude 强制缓存')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelOtherSettingsChange('force_cache_enabled', value)} extraText={t('开启后，若用户请求未携带 cache_control 标记，将自动按 system(1)+messages(2)+tools(1) 注入缓存断点，并在响应 usage 中将缓存字段归零、折算回 input_tokens')} />
                   )}
 
                   <Form.Switch field='pass_through_body_enabled' label={t('透传请求体')} checkedText={t('开')} uncheckedText={t('关')} onChange={(value) => handleChannelSettingsChange('pass_through_body_enabled', value)} extraText={t('启用请求体透传功能')} />

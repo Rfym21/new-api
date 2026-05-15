@@ -1,6 +1,7 @@
 package claude
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -113,6 +114,14 @@ func (a *Adaptor) ConvertOpenAIResponsesRequest(c *gin.Context, info *relaycommo
 }
 
 func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, requestBody io.Reader) (any, error) {
+	if info != nil && info.ChannelOtherSettings.ForceCacheEnabled && requestBody != nil {
+		bodyBytes, err := io.ReadAll(requestBody)
+		if err != nil {
+			return nil, fmt.Errorf("read request body for force cache injection failed: %w", err)
+		}
+		bodyBytes = InjectForceCacheControl(bodyBytes)
+		requestBody = bytes.NewBuffer(bodyBytes)
+	}
 	return channel.DoApiRequest(a, c, info, requestBody)
 }
 

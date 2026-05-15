@@ -125,6 +125,13 @@ type ChannelOtherSettings struct {
 	BodyFieldPassThrough []FieldPassThroughRule `json:"body_field_pass_through,omitempty"`
 	// HeaderFieldPassThrough 渠道级请求头透传白名单。
 	HeaderFieldPassThrough []FieldPassThroughRule `json:"header_field_pass_through,omitempty"`
+
+	// ForceCacheEnabled 渠道级强制缓存开关，仅对 Claude 渠道生效。
+	// 开启后：若上游请求体已存在任何 cache_control 标记则保持原样；
+	// 否则按 system(1)+messages(2)+tools(1) 注入 ephemeral 缓存标记，
+	// 同时将响应 usage 中的 cache_creation_input_tokens、cache_read_input_tokens
+	// 与 cache_creation.ephemeral_* 归零，并将该部分 token 折算回 input_tokens。
+	ForceCacheEnabled bool `json:"force_cache_enabled,omitempty"`
 }
 
 // FieldPassThroughRule 字段透传规则。
