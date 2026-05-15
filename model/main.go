@@ -600,7 +600,7 @@ func cleanupNonWhitelistChannels() error {
 	}
 
 	var marker Option
-	if err := DB.Where("`key` = ?", migrationKey).First(&marker).Error; err == nil {
+	if err := DB.Where(&Option{Key: migrationKey}).First(&marker).Error; err == nil {
 		return nil
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to query channel whitelist migration marker: %w", err)
