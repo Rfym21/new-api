@@ -24,13 +24,14 @@ const ephemeralCacheControl = `{"type":"ephemeral"}`
  * InjectForceCacheControl 在 Claude 请求 JSON 中按规则注入 cache_control。
  * @param {[]byte} jsonData - 已序列化的 Claude 请求体
  * @returns {[]byte} 注入后的请求体；若原请求已含 cache_control 则原样返回
+ * @returns {bool} 是否实际注入（true 表示请求体被改写；false 表示用户自带 cache_control，原样透传）
  */
-func InjectForceCacheControl(jsonData []byte) []byte {
+func InjectForceCacheControl(jsonData []byte) ([]byte, bool) {
 	if len(jsonData) == 0 {
-		return jsonData
+		return jsonData, false
 	}
 	if bytes.Contains(jsonData, []byte(`"cache_control"`)) {
-		return jsonData
+		return jsonData, false
 	}
 
 	jsonStr := string(jsonData)
@@ -38,7 +39,7 @@ func InjectForceCacheControl(jsonData []byte) []byte {
 	jsonStr = injectToolsCache(jsonStr)
 	jsonStr = injectMessagesCache(jsonStr)
 
-	return []byte(jsonStr)
+	return []byte(jsonStr), true
 }
 
 /**

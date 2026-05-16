@@ -66,4 +66,9 @@ const (
 	// ContextKeyLanguage stores the user's language preference for i18n
 	ContextKeyLanguage ContextKey = "language"
 	ContextKeyIsStream ContextKey = "is_stream"
+
+	// ContextKeyClaudeForceCacheInjected 标记本次请求是否由「渠道强制缓存」实际注入了 cache_control。
+	// 仅当注入发生（即原请求未携带任何 cache_control 标记）时为 true；
+	// 响应阶段据此决定是否重写 usage（用户自带 cache_control 时完全透传 usage）。
+	ContextKeyClaudeForceCacheInjected ContextKey = "claude_force_cache_injected"
 )

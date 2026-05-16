@@ -801,7 +801,8 @@ func HandleStreamResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 	if claudeResponse.Delta != nil && claudeResponse.Delta.StopReason != nil {
 		maybeMarkClaudeRefusal(c, *claudeResponse.Delta.StopReason)
 	}
-	forceCache := info != nil && info.ChannelOtherSettings.ForceCacheEnabled
+	// 仅当本次请求实际注入了 cache_control（用户自带则跳过）时，才重写 usage
+	forceCache := common.GetContextKeyBool(c, constant.ContextKeyClaudeForceCacheInjected)
 	if forceCache {
 		if claudeResponse.Message != nil && claudeResponse.Message.Usage != nil {
 			ApplyForceCacheUsageZeroing(claudeResponse.Message.Usage)
@@ -918,7 +919,8 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 	if claudeInfo.Usage == nil {
 		claudeInfo.Usage = &dto.Usage{}
 	}
-	forceCache := info != nil && info.ChannelOtherSettings.ForceCacheEnabled
+	// 仅当本次请求实际注入了 cache_control（用户自带则跳过）时，才重写 usage
+	forceCache := common.GetContextKeyBool(c, constant.ContextKeyClaudeForceCacheInjected)
 	if forceCache && claudeResponse.Usage != nil {
 		ApplyForceCacheUsageZeroing(claudeResponse.Usage)
 	}

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/relay/channel"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
@@ -119,7 +121,13 @@ func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, request
 		if err != nil {
 			return nil, fmt.Errorf("read request body for force cache injection failed: %w", err)
 		}
-		bodyBytes = InjectForceCacheControl(bodyBytes)
+		newBody, injected := InjectForceCacheControl(bodyBytes)
+		bodyBytes = newBody
+		// 仅当本次实际注入了 cache_control 时，才在响应阶段重写 usage；
+		// 若用户自带 cache_control，则保持上游响应 usage 完全透传。
+		if injected {
+			common.SetContextKey(c, constant.ContextKeyClaudeForceCacheInjected, true)
+		}
 		requestBody = bytes.NewBuffer(bodyBytes)
 	}
 	return channel.DoApiRequest(a, c, info, requestBody)
